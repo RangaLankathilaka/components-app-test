@@ -1,0 +1,30 @@
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+
+<shiporder orderid="889923">
+
+
+    <orderperson>John Smith</orderperson>
+    <shipto>
+        <id>s001</id>
+        <name>Ola Nordmann</name>
+        <address>Langgt 23</address>
+        <city>4000 Stavanger</city>
+        <country>Norway</country>
+    </shipto>
+
+    <items>
+        <id>i001</id>
+        <title>Empire Burlesque</title>
+        <note>Special Edition</note>
+        <quantity>1</quantity>
+        <price>10.90</price>
+    </items>
+
+    <items>
+        <id>i002</id>
+        <title>Hide your heart</title>
+        <note>Special Edition pro</note>
+        <quantity>1</quantity>
+        <price>9.90</price>
+    </items>
+</shiporder>
