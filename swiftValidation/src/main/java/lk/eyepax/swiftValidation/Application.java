@@ -1,0 +1,36 @@
+package lk.eyepax.swiftValidation;
+
+import lk.eyepax.swiftValidation.dto.LCDto;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.Set;
+//@SwiftType(message = "Input value is invalid",type = "z",length = 16)
+
+
+
+public class Application {
+
+
+
+
+    public static void main(String[] args) throws NoSuchFieldException, NoSuchMethodException {
+
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        LCDto lc = new LCDto("sdfsdg","hghg","2013-13-09", new String[]{"uhioho","gku","ygiyg","uihuo"});
+
+
+        Set<ConstraintViolation<LCDto>> violations = validator.validate(lc);
+
+        for (ConstraintViolation<LCDto> violation : violations) {
+            System.out.println(violation.getMessage());
+        }
+
+
+
+    }
+}

@@ -1,0 +1,174 @@
+public class TfapAccnBnkService {
+
+	// Static Attributes
+	////////////////////
+	private static final String entityName = "TTfAccnBnk";
+	private static Logger log = Logger.getLogger(TfapAccnBnkService.class);
+
+	// Attributes
+	/////////////
+	@Autowired
+	@Qualifier("tfAccnBnkDao")
+	private GenericDao<TTfAccnBnk, TTfAccnBnkId> tfAccnBnkDao;
+
+	public TTfAccnBnk entityFromDTO(TfAccnBnk dto) throws Exception {
+		TTfAccnBnk tTfAccnBnk = new TTfAccnBnk();
+		BeanUtils.copyProperties(tTfAccnBnk, dto);
+
+		TTfAccnBnkId tTfAccnBnkId = new TTfAccnBnkId();
+		tTfAccnBnkId.setTfabAccnid(dto.getTfabAccnid());
+		tTfAccnBnkId.setTfabBnk(dto.getTfabBnk());
+		tTfAccnBnkId.setTfabBnkAccn(dto.getTfabBnkAccn());
+		tTfAccnBnkId.setTfabBnkBr(dto.getTfabBnkBr());
+
+		tTfAccnBnk.setId(tTfAccnBnkId);
+
+		return tTfAccnBnk;
+	}
+
+	public void save(TfAccnBnk dto) {
+
+		try {
+			TTfAccnBnk entity = entityFromDTO(dto);
+			tfAccnBnkDao.saveOrUpdate(entity);
+
+		} catch (Exception e) {
+
+		}
+	}
+
+	public void populateBeanFromMap(TfAccnBnk dto, Map<String, String> parameterMap) {
+		for (Map.Entry<String, String> entry : parameterMap.entrySet()) {
+			try {
+				BeanUtils.setProperty(dto, entry.getKey(), entry.getValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Exception.class })
+	public List<TfAccnBnk> findDTOsByAnd(TfAccnBnk dto, int iDisplayStart, int iDisplayLength, String orderByClause)
+			throws Exception {
+		List<TfAccnBnk> dtos = new ArrayList<>();
+		try {
+			List<TTfAccnBnk> entities = this.findEntitiesByAnd(dto, getBenfSelectClause(), orderByClause,
+					iDisplayLength, iDisplayStart);
+			if (null == entities)
+				throw new Exception("entities null");
+
+			for (TTfAccnBnk entity : entities) {
+				dtos.add(this.dtoFromEntity(entity));
+			}
+			return dtos;
+		} catch (Exception ex) {
+			log.error("findAllDTO", ex);
+			return null;
+		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Exception.class })
+	public List<TTfAccnBnk> findEntitiesByAnd(TfAccnBnk dto, String selectClause, String orderByClause, int limit,
+			int offset) throws Exception {
+
+		log.info("findEntitesByAnd");
+		try {
+			String whereClause = getWhereClause(dto, false);
+			HashMap<String, Object> parameters = getParameters(dto);
+			if (whereClause != null)
+				return tfAccnBnkDao.getByQuery(selectClause + whereClause + orderByClause, parameters, limit, offset);
+			else
+				return tfAccnBnkDao.getByQuery(selectClause + orderByClause, parameters, limit, offset);
+		} catch (Exception ex) {
+			log.error("findAll", ex);
+			return null;
+		}
+	}
+
+	private String getOperator(boolean whereprinted) {
+		if (!whereprinted) {
+			return " WHERE ";
+		} else {
+			return " AND ";
+		}
+	}
+
+	protected String getBenfSelectClause() {
+		return "SELECT o FROM " + entityName + " o";
+	}
+
+	public String getWhereClause(TfAccnBnk dto, boolean whereprinted) {
+		// TODO Auto-generated method stub
+		StringBuffer searchStatement = new StringBuffer();
+
+		if (dto.getTfabAccnid() != null && !dto.getTfabAccnid().equals("")) {
+			searchStatement.append(getOperator(whereprinted) + "o.id.tfabAccnid LIKE :tfabAccnid");
+			whereprinted = true;
+		}
+		return searchStatement.toString();
+	}
+
+	public HashMap<String, Object> getParameters(TfAccnBnk dto) {
+		HashMap<String, Object> parameters = new HashMap<String, Object>();
+		if (dto.getTfabAccnid() != null && !dto.getTfabAccnid().equals("")) {
+			parameters.put("tfabAccnid", "%" + dto.getTfabAccnid() + "%");
+		}
+
+		return parameters;
+	}
+
+	protected TfAccnBnk dtoFromEntity(TTfAccnBnk entity) throws Exception {
+		TfAccnBnk dto = new TfAccnBnk();
+		BeanUtils.copyProperties(dto, entity);
+		dto.setTfabAccnid(entity.getId().getTfabAccnid());
+		dto.setTfabBnk(entity.getId().getTfabBnk());
+		dto.setTfabBnkAccn(entity.getId().getTfabBnkAccn());
+		dto.setTfabBnkBr(entity.getId().getTfabBnkBr());
+
+		return dto;
+	}
+
+	public LinkedHashMap<String, String> getPropertyToColMap() {
+
+		@SuppressWarnings("serial")
+		LinkedHashMap<String, String> propToColTable = new LinkedHashMap<String, String>() {
+			{
+
+				put("tfabAccnid", "id.tfabAccnid");
+				put("tfabCcy", "tfabCcy");
+
+			}
+		};
+		return propToColTable;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, rollbackFor = { Exception.class })
+	public int countDTOsByAnd(TfAccnBnk dto) throws Exception {
+		String whereClause = getWhereClause(dto, false);
+		HashMap<String, Object> parameters = getParameters(dto);
+		int count = 0;
+		if (StringUtils.isNotEmpty(whereClause) && null != parameters && parameters.size() > 0) {
+			count = this.tfAccnBnkDao.count("SELECT COUNT(o) FROM " + entityName + " o" + whereClause, parameters);
+		} else if (StringUtils.isNotEmpty(whereClause)) {
+			count = this.tfAccnBnkDao.count("SELECT COUNT(o) FROM " + entityName + " o" + whereClause);
+		} else {
+			count = this.tfAccnBnkDao.count("SELECT COUNT(o) FROM " + entityName + " o");
+		}
+		return count;
+	}
+
+	public String getBnkRefNo(String tfabAccnid) throws Exception {
+
+		String banlRefNo = "";
+
+		List<TTfAccnBnk> accBnk = tfAccnBnkDao.getByQuery("select t from TTfAccnBnk t");
+		for (TTfAccnBnk bnkRefNo : accBnk) {
+			if (bnkRefNo.getId().getTfabAccnid().equals(tfabAccnid)) {
+				banlRefNo = bnkRefNo.getTfabBnkRefNo();
+			}
+		}
+		return banlRefNo;
+
+	}
+
+}

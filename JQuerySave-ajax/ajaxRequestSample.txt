@@ -1,0 +1,16 @@
+{
+	"id":"o001",
+"date":"2018-05-05",
+"customer":{
+	"id":"coo1",
+	"name":"Ranga",
+	"address":"Ingiriya"
+},
+"orderDetailList": [
+  {
+    "orderId": "o001",
+    "itemCode": "i0002",
+    "unitPrice": "20",
+    "qtyOnHand": "LambdaPoli",
+  }
+]

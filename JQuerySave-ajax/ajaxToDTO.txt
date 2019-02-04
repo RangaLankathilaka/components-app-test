@@ -1,0 +1,22 @@
+@RequestMapping(value = ApplicationDetail_BNK, method = RequestMethod.POST)
+	public void getBankCustomerId(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
+
+		String json = "";
+		if (br != null) {
+
+			json = br.readLine();
+
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		TfApplicationDetail tfApplicationDetail = mapper.readValue(json, TfApplicationDetail.class);
+
+		response.setContentType("application/json");
+		mapper.writeValue(response.getOutputStream(),
+				tfapAccnBnkService.getBnkRefNo(tfApplicationDetail.getSelectBank()));
+
+	}
+	

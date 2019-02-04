@@ -1,0 +1,42 @@
+$(document).on("click","#addCounterpartSubmit",function () {
+             console.log("Himmmmmmmmmmm");
+             
+             var bname=$("#add_tfacpName").val();
+             console.log(bname);  
+             var bcontact=  $("#add_tfacpTel").val();
+             var pname=  $("#add_tfacpPriConName").val();
+             var email=  $("#add_tfacpEmail").val();
+             var address1=  $("#add_tfacpAddr1").val();
+             var address2=  $("#add_tfacpAddr2").val();
+             var address3= $("#add_tfacpAddr3").val();
+
+            var param = { "bname":bname,"bcontact":bcontact,"pname":pname,"email":email,"address1":address1,"address2":address2,"address3":address3 };
+             
+			 var ajaxConfig = {
+                 dataType: "json",
+                 contentType: "application/json;charset=utf-8",
+				 method:"POST",
+				 url:"/TFAPortal/tfApplication/beneficiary/save",
+				 data: JSON.stringify(param),
+				 async:true
+				    }
+
+				    console.log(ajaxConfig);
+            $.ajax(ajaxConfig).done(function(response){
+
+
+                if (response){
+
+                    alert("Beneficiary is successfully saved");
+                    console.log(response);
+                }else{
+                    alert("Failed to save the Beneficiary ");
+
+                }
+
+
+            });
+
+
+
+			        });

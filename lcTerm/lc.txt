@@ -1,0 +1,482 @@
+package com.vcc.camelone.tfap.process.mediator.impl;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.vcc.camelone.cac.model.Principal;
+import com.vcc.camelone.com.dao.GenericDao;
+import com.vcc.camelone.tfap.application.dto.TfAddress;
+import com.vcc.camelone.tfap.application.dto.TfCharge;
+import com.vcc.camelone.tfap.application.dto.TfDocLcIssuance;
+import com.vcc.camelone.tfap.application.dto.TfRequiredDocument;
+import com.vcc.camelone.tfap.application.model.TTfDocLcIssuance;
+import com.vcc.camelone.tfap.master.model.TTfMstConfIns;
+import com.vcc.camelone.tfap.master.model.TTfMstCravlType;
+import com.vcc.camelone.tfap.master.model.TTfMstLcType;
+import com.vcc.camelone.tfap.master.model.TTfMstPayinfoSendby;
+import com.vcc.camelone.tfap.page.service.TfapDropDownService;
+import com.vcc.camelone.tfap.process.mediator.AbstractTfLCIssuanceMediator;
+import com.vcc.camelone.tfap.process.model.AbstractTfApplication;
+import com.vcc.camelone.tfap.process.model.MasterTfApplication;
+import com.vcc.camelone.tfap.process.model.TfApplicationLcIssuance;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.MessageSource;
+import org.springframework.validation.Errors;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class TfLCIssuanceMediator extends AbstractTfLCIssuanceMediator {
+
+	// Static Attributes
+	////////////////////
+	private static Logger log = Logger.getLogger(TfLCIssuanceMediator.class);
+
+	// Attributes
+	/////////////
+	private TfApplicationLcIssuance tfApplicationLcIssuance;
+
+	@Autowired
+	@Qualifier("tfLCIssuanceDao")
+	protected GenericDao<TTfDocLcIssuance, String> tfLCIssuanceDao;
+	
+	@Autowired
+	@Qualifier("tfapDropDownService")
+	private TfapDropDownService tfapDropDownService;
+
+	@Override
+	protected TTfDocLcIssuance entityFromDTO(TfApplicationLcIssuance dto) throws Exception {
+		log.debug("entityFromDTO");
+
+		tfApplicationLcIssuance = dto;
+
+		try {
+			if (null == dto)
+				throw new Exception("dto param null");
+
+			TTfDocLcIssuance tTfDocLcIssuance = new TTfDocLcIssuance();
+
+			dto.getTfDocLcIssuance().copyBeanProperties(tTfDocLcIssuance);
+			
+			TTfMstPayinfoSendby tTfMstPayinfoSendby = new TTfMstPayinfoSendby();
+			tTfMstPayinfoSendby.setTfmpsId(dto.getTfDocLcIssuance().getTfdlcSendBy());
+			tTfDocLcIssuance.setTTfMstPayinfoSendby(tTfMstPayinfoSendby);
+
+			TTfMstConfIns tTfMstConfIns = new TTfMstConfIns();
+			tTfMstConfIns.setTfmciId(dto.getTfDocLcIssuance().getTfdlcConfirmInstr());
+			tTfDocLcIssuance.setTTfMstConfIns(tTfMstConfIns);
+
+			TTfMstLcType tTfMstLcType = new TTfMstLcType();
+			tTfMstLcType.setTfmltId(dto.getTfDocLcIssuance().getTfdlcType());
+			tTfDocLcIssuance.setTTfMstLcType(tTfMstLcType);
+
+			TTfMstCravlType tTfMstCravlType = new TTfMstCravlType();
+			tTfMstCravlType.setTfmctId(dto.getTfDocLcIssuance().getTfdlcCrAvailBy());
+			tTfDocLcIssuance.setTTfMstCravlType(tTfMstCravlType);
+			tTfDocLcIssuance.setTfdlcPartialShipAllowedFlg(
+					dto.getTfDocLcIssuance().isTfdlcPartialShipAllowedFlg() ? "YES" : "NO");
+			tTfDocLcIssuance.setTfdlcTransferableFlg(dto.getTfDocLcIssuance().isTfdlcTransferableFlg() ? "YES" : "NO");
+			tTfDocLcIssuance
+					.setTfdlcTranshipAllowedFlg(dto.getTfDocLcIssuance().isTfdlcTranshipAllowedFlg() ? "YES" : "NO");
+
+			return tTfDocLcIssuance;
+
+		} catch (Exception ex) {
+			log.error("entityFromDTO", ex);
+			return null;
+		}
+	}
+
+	@Override
+	protected TfApplicationLcIssuance dtoFromEntity(TTfDocLcIssuance entity) throws Exception {
+		log.debug("dtoFromEntity");
+
+		try {
+			TfApplicationLcIssuance dto = new TfApplicationLcIssuance();
+			TfDocLcIssuance tfDocLcIssuance = new TfDocLcIssuance();
+			
+			entity.copyBeanProperties(tfDocLcIssuance);
+			dto.setTfDocLcIssuance(tfDocLcIssuance);
+			dto.getTfDocLcIssuance().setTfdlcTransferableFlg(entity.getTfdlcTransferableFlg().equals("YES"));
+			dto.getTfDocLcIssuance().setTfdlcTranshipAllowedFlg(entity.getTfdlcTranshipAllowedFlg().equals("YES"));
+			dto.getTfDocLcIssuance()
+					.setTfdlcPartialShipAllowedFlg(entity.getTfdlcPartialShipAllowedFlg().equals("YES"));
+
+			return dto;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@Override
+	protected TTfDocLcIssuance updateEntity(TTfDocLcIssuance entity, Principal principal, Date date) throws Exception {
+		log.info("updateEntity");
+
+		try {
+			if (null == entity)
+				throw new Exception("entity param null");
+			if (null == principal)
+				throw new Exception("principal param null");
+			if (null == date)
+				throw new Exception("date param null");
+
+			return entity;
+		} catch (Exception ex) {
+			log.error("updateEntity", ex);
+			return null;
+		}
+	}
+
+	@Override
+	protected TTfDocLcIssuance updateEntityStatus(TTfDocLcIssuance entity, char status) throws Exception {
+		log.info("updateEntityStatus");
+
+		try {
+			if (null == entity)
+				throw new Exception("entity param null");
+
+			return entity;
+		} catch (Exception ex) {
+			log.error("updateEntityStatus", ex);
+			return null;
+		}
+	}
+
+	@Override
+	protected String entityKeyFromDTO(TfApplicationLcIssuance dto) throws Exception {
+		log.info("entityKeyFromDTO");
+
+		try {
+			if (null == dto)
+				throw new Exception("dto param null");
+
+			return dto.getTfDocLcIssuance().getTfdlcTftId();
+		} catch (Exception ex) {
+			log.error("entityKeyFromDTO", ex);
+			return null;
+		}
+	}
+
+	@Override
+	protected TfApplicationLcIssuance preSaveUpdateDTO(TTfDocLcIssuance storedEntity, TfApplicationLcIssuance dto)
+			throws Exception {
+		if (null == storedEntity || storedEntity.equals(""))
+			throw new Exception("storedEntity param null or empty");
+		if (null == dto || dto.equals(""))
+			throw new Exception("dto param null or empty");
+		log.debug("preSaveUpdateDTO..");
+
+		try {
+
+			dto.getTfDocLcIssuance().setTfdlcTftId(storedEntity.getTfdlcTftId());
+			return dto;
+		} catch (Exception e) {
+			log.debug("preSaveUpdateDTO Exception");
+			e.getMessage();
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@Override
+	public int validate(AbstractTfApplication.FIELD_TYPE type, TfApplicationLcIssuance field, Errors errors)
+			throws Exception {
+		log.debug("validate");
+		try {
+			super.commonValidate(type, field, errors);
+			return 0;
+		} catch (Exception ex) {
+			log.error("validate", ex);
+			throw ex;
+		}
+	}
+	
+	@Override
+	public int validateMaxLengths(AbstractTfApplication.FIELD_TYPE type, TfApplicationLcIssuance field, Errors errors)
+			throws Exception {
+		log.info("length validate" + type.toString());
+		try {
+			super.commonLengthValidate(type, field, errors);
+			return 0;
+		} catch (Exception ex) {
+			log.error("validate", ex);
+			throw ex;
+		}
+	}
+
+	@Override
+	public void init(TfApplicationLcIssuance field) throws Exception {
+		log.debug("init");
+		try {
+		} catch (Exception ex) {
+			log.error("init", ex);
+			throw ex;
+		}
+	}
+
+	@Override
+	public void get(Principal principal, AbstractTfApplication.FIELD_TYPE type, TfApplicationLcIssuance field)
+			throws Exception {
+
+		log.debug("get value");
+		try {
+
+		} catch (Exception ex) {
+			log.error("get", ex);
+			throw ex;
+		}
+	}
+
+	@Override
+	public int saveOrUpdate(Principal principal, AbstractTfApplication.FIELD_TYPE type, TfApplicationLcIssuance field)
+			throws Exception {
+
+		try {
+			if (null == field)
+				throw new Exception("dto param null");
+
+			TTfDocLcIssuance entity = this.entityFromDTO(field);
+			this.updateEntityStatus(entity, 'A');
+			this.updateEntity(entity, principal, new Date());
+
+			entity.setTfdlcCrAvailWBnkAddr(field.getTfDocLcIssuance().getTfdlcCrAvailWBnkAddr().getOneLineAddr(35));
+			entity.setTfdlcAdvBnkAddr(field.getTfDocLcIssuance().getTfdlcAdvBnkAddr().getOneLineAddr(35));
+			entity.setTfdlcReqConfirmPartyBnkAddr(field.getTfDocLcIssuance().getTfdlcReqConfirmPartyBnkAddr().getOneLineAddr(35));
+			entity.setTfdlcDraweeBnkAddr(field.getTfDocLcIssuance().getTfdlcDraweeBnkAddr().getOneLineAddr(35));
+			entity.setTfdlcToleranceLevel(getToleranceLevel());
+			entity.setTfdlcCrDraftsAt(getDraftAt(field.getTfDocLcIssuance()));
+			entity.setTfdlvDraweeBnkName(field.getTfDocLcIssuance().getTfdlcDraweeBnkName());
+
+			if (field.getTfDocLcIssuance().getTfdlcAmt() == null) {
+				entity.setTfdlcAmt(new BigDecimal(0));
+			}
+
+			if (field.getTfDocLcIssuance().getTfdlcSendBy().length() < 4) {
+				entity.getTTfMstPayinfoSendby().setTfmpsId("--");
+			}
+			if (field.getTfDocLcIssuance().getTfdlcConfirmInstr().length() < 4) {
+				entity.getTTfMstConfIns().setTfmciId("--");
+			}
+
+			if (field.getTfDocLcIssuance().getTfdlcType().length() < 4) {
+				entity.getTTfMstLcType().setTfmltId("--");
+			}
+
+			if (field.getTfDocLcIssuance().getTfdlcCrAvailBy().length() < 4) {
+				entity.getTTfMstCravlType().setTfmctId("--");
+			}
+
+			entity.setTfdlcCreateDt(new Date());
+			entity.setTfdlcCreateUid(principal.getUserId());
+
+			String reqDocs = getTfdlcReqdDocs1(field.getRequiredDocumentList());
+			if (reqDocs != null) {
+				if (reqDocs.length() > 4096) {
+					entity.setTfdlcReqdDocs1(reqDocs.substring(0, 4096));
+					entity.setTfdlcReqdDocs2(reqDocs.substring(4096));
+				} else {
+					entity.setTfdlcReqdDocs1(reqDocs);
+				}
+			}
+			
+			entity.setTfdlcChrgToBene(getTfdlcChrgToBene(tfApplicationLcIssuance.getTfCharge()));
+
+			tfLCIssuanceDao.saveOrUpdate(entity);
+			return 0;
+		} catch (Exception ex) {
+			log.error("saveOrUpdate", ex);
+			throw ex;
+		}
+	}
+
+	@Override
+	public void update(MasterTfApplication masterLPCO) throws Exception {
+
+	}
+
+	@Override
+	public void get(Principal principal, AbstractTfApplication.FIELD_TYPE type, MasterTfApplication field)
+			throws Exception {
+		log.info("get");
+		try {
+
+			if (null == field.getTransactionId())
+				throw new Exception("Key param is null");
+			TTfDocLcIssuance entity = tfLCIssuanceDao.find(field.getTransactionId());
+			String docPattern = "";
+			if (entity == null)
+				return;
+			if (entity.getTfdlcReqdDocs1() != null
+					&& (entity.getTfdlcReqdDocs1()).length() == 4096) {
+				String docPattern1 = entity.getTfdlcReqdDocs1();
+				String docPattern2 = entity.getTfdlcReqdDocs2();
+
+				docPattern = docPattern1 + docPattern2;
+			} else {
+				docPattern = entity.getTfdlcReqdDocs1();
+			}
+
+			String chargeCode = entity.getTfdlcChrgToBene();
+			String toleranceLevel = entity.getTfdlcToleranceLevel();
+			String tfdlcCrDraftsAt = entity.getTfdlcCrDraftsAt();
+
+			TfApplicationLcIssuance lcDto = dtoFromEntity(entity);
+
+			lcDto.getTfDocLcIssuance().setTfdlcCrAvailWBnkAddr(new TfAddress(entity.getTfdlcCrAvailWBnkAddr(),35));
+			lcDto.getTfDocLcIssuance().setTfdlcAdvBnkAddr(new TfAddress(entity.getTfdlcAdvBnkAddr(),35));
+			lcDto.getTfDocLcIssuance().setTfdlcReqConfirmPartyBnkAddr(new TfAddress(entity.getTfdlcReqConfirmPartyBnkAddr(),35));
+			lcDto.getTfDocLcIssuance().setTfdlcDraweeBnkAddr(new TfAddress(entity.getTfdlcDraweeBnkAddr(),35));
+
+			lcDto.getTfDocLcIssuance().setTfdlcSendBy(entity.getTTfMstPayinfoSendby().getTfmpsId());
+			lcDto.getTfDocLcIssuance().setTfdlcConfirmInstr(entity.getTTfMstConfIns().getTfmciId());
+			lcDto.getTfDocLcIssuance().setTfdlcType(entity.getTTfMstLcType().getTfmltId());
+			lcDto.getTfDocLcIssuance().setTfdlcCrAvailBy(entity.getTTfMstCravlType().getTfmctId());
+
+			lcDto.getTfDocLcIssuance()
+					.setTfdlcDraweeBnkName(entity.getTfdlvDraweeBnkName());
+
+			if (entity.getTfdlcTransferableFlg().equals("YES")) {
+				lcDto.getTfDocLcIssuance().setTfdlcTransferableFlg(true);
+			} else {
+				lcDto.getTfDocLcIssuance().setTfdlcTransferableFlg(false);
+			}
+			
+			if(entity.getTfdlcAmt().compareTo(new BigDecimal(0))== 0) {
+				lcDto.getTfDocLcIssuance().setTfdlcAmt(null);
+			}	
+
+			TfCharge tfCharge = new TfCharge();
+			lcDto.setTfCharge(tfCharge);
+
+			String chargeCodeList[] = chargeCode.split(",");
+			for (String code : chargeCodeList ) {
+				if (code.equals("COMM")) {
+					lcDto.getTfCharge().setBankCommission(String.valueOf(0));
+				} else if (code.equals("AGENT")) {
+					lcDto.getTfCharge().setAgent(String.valueOf(0));
+				} else if (code.equals("CORCOM")) {
+					lcDto.getTfCharge().setBankCorrespondentCommission(String.valueOf(0));
+				} else if (code.equals("DISC")) {
+					lcDto.getTfCharge().setCommercialDiscount(String.valueOf(0));
+				} else if (code.equals("INSUR")) {
+					lcDto.getTfCharge().setInsurancePremium(String.valueOf(0));
+				} else if (code.equals("POST")) {
+					lcDto.getTfCharge().setBankPostage(String.valueOf(0));
+				} else if (code.equals("STAMP")) {
+					lcDto.getTfCharge().setStampDuty(String.valueOf(0));
+				} else if (code.equals("TELECHAR")) {
+					lcDto.getTfCharge().setTeletransmissionCharge(String.valueOf(0));
+				} else if (code.equals("WAREHOUS")) {
+					lcDto.getTfCharge().setWharfingWarehouse(String.valueOf(0));
+				} else if (code.equals("OTHERS")) {
+					lcDto.getTfCharge().setOther(String.valueOf(0));
+				}
+				else {
+					lcDto.getTfCharge().setOtherDesc(code);
+				}
+			}
+
+			if (toleranceLevel != null) {
+				String lines[] = toleranceLevel.split("/");
+				if (lines.length == 2) {
+					lcDto.getTfDocLcIssuance().setTfdlcToleranceLevel1(lines[0]);
+					lcDto.getTfDocLcIssuance().setTfdlcToleranceLevel2(lines[1]);
+				} else if (lines.length == 1) {
+					lcDto.getTfDocLcIssuance().setTfdlcToleranceLevel1(lines[0]);
+				}
+			}
+
+			if (tfdlcCrDraftsAt != null) {
+				String lines[] = tfdlcCrDraftsAt.split(":Days:");
+				if(lines.length>1 && !tfapDropDownService.getDraftAt().containsKey(lines[1]) ){
+					lcDto.getTfDocLcIssuance().setTfdlcCrDraftsAtOthers(lines[1]);
+					lcDto.getTfDocLcIssuance().setTfdlcCrDraftsAt1(lines[0]);
+					lcDto.getTfDocLcIssuance().setTfdlcCrDraftsAt2("Others");
+				} else if (lines.length == 2) {
+					lcDto.getTfDocLcIssuance().setTfdlcCrDraftsAt1(lines[0]);
+					lcDto.getTfDocLcIssuance().setTfdlcCrDraftsAt2(lines[1]);
+
+				} else if (lines.length == 1) {
+					lcDto.getTfDocLcIssuance().setTfdlcCrDraftsAt1(lines[0]);
+				}
+			}
+
+			if (docPattern != null) {
+				List<String> lines = Arrays.asList(docPattern.replace("\\n", "\n").split("\\r?\\n"));
+				List<TfRequiredDocument> requiredDocuments = new ArrayList<>();
+
+				for (String colonString :lines) {
+					TfRequiredDocument tfRequiredDocument = new TfRequiredDocument();
+					String lines2[] = colonString.replace(":", " : ").split(":");
+					
+					tfRequiredDocument.setDocType(lines2[0].trim());
+					tfRequiredDocument.setwSignature(lines2[1].trim());
+					tfRequiredDocument.setwOSignature(lines2[2].trim());
+					tfRequiredDocument.setNoCopy(lines2[3].trim());
+					tfRequiredDocument.setRemark(lines2[4].trim());
+					
+					requiredDocuments.add(tfRequiredDocument);
+				}
+
+				lcDto.setRequiredDocumentList(requiredDocuments);
+			}
+			field.setLc(lcDto);
+
+		} catch (Exception ex) {
+			log.error("get", ex);
+			throw ex;
+		}
+	}
+
+	@Override
+	public void setMessageSource(MessageSource messageSource) {
+		super.messageSource = messageSource;
+	}
+
+	public String getTfdlcReqdDocs1(List<TfRequiredDocument> requiredDocList) {
+		if (tfApplicationLcIssuance.getRequiredDocumentList() != null) {
+			return requiredDocList.stream().map(doc -> String.join(":", new String[] 
+					{ doc.getDocType(),
+							doc.getwSignature(),
+							doc.getwOSignature(),
+							doc.getNoCopy(),
+							doc.getRemark()})).collect(Collectors.joining("\\n"));
+		} else {
+			return null;
+		}
+	}
+
+	public String getTfdlcChrgToBene(TfCharge charge) {
+		HashMap<String, String> chargeMap = new HashMap<String, String>();
+		chargeMap.put("AGENT", charge.getAgent());
+		chargeMap.put("COMM", charge.getBankCommission());
+		chargeMap.put("CORCOM", charge.getBankCorrespondentCommission());
+		chargeMap.put("DISC", charge.getCommercialDiscount());
+		chargeMap.put("INSUR", charge.getInsurancePremium());
+		chargeMap.put("POST", charge.getBankPostage());
+		chargeMap.put("STAMP", charge.getStampDuty());
+		chargeMap.put("TELECHAR", charge.getTeletransmissionCharge());
+		chargeMap.put("WAREHOUS", charge.getWharfingWarehouse());
+		chargeMap.put("OTHERS,"+ charge.getOtherDesc(), charge.getOther());
+		
+		return chargeMap.entrySet().stream().filter(m -> !StringUtils.isEmpty(m.getValue()))
+				.map(m -> m.getKey()).collect(Collectors.joining(","));
+	}
+
+	public String getToleranceLevel() {
+		return tfApplicationLcIssuance.getTfDocLcIssuance().getTfdlcToleranceLevel1() + "/"
+				+ tfApplicationLcIssuance.getTfDocLcIssuance().getTfdlcToleranceLevel2();
+	}
+
+	public String getDraftAt(TfDocLcIssuance lc) {
+		return  lc.getTfdlcCrDraftsAt1() + ":Days:"+ (lc.getTfdlcCrDraftsAt2().equals("Others")? lc.getTfdlcCrDraftsAtOthers() :  lc.getTfdlcCrDraftsAt2());
+	}
+}
