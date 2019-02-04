@@ -108,5 +108,16 @@ public class Stream {
                 //System.out.println(split);
             }
         });
+
+
+        //16 .joining
+
+        String collect = subDetails.entrySet().stream().map(i -> i.getValue()).collect(Collectors.joining(","));
+        System.out.println(collect);
+
+        //17 .joining and filter cat as the if condition
+
+        String collect1 = subDetails.entrySet().stream().filter(i->!i.getValue().isEmpty()).map(i -> i.getValue()).collect(Collectors.joining(","));
+        System.out.println(collect);
     }
 }
