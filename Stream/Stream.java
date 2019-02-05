@@ -119,5 +119,17 @@ public class Stream {
 
         String collect1 = subDetails.entrySet().stream().filter(i->!i.getValue().isEmpty()).map(i -> i.getValue()).collect(Collectors.joining(","));
         System.out.println(collect);
+		
+		//18.compare neighbour element
+		
+        Optional<Car> car = persons.stream().reduce((c1, c2)
+                -> c1.getPrice() > c2.getPrice() ? c1 : c2);
+
+        car.ifPresent(i-> System.out.println(i));
+
+      //19.add neighbour element
+        double total=Stream.of(7.3,4.5,3.2,5,6).reduce(0.0,(Double a,Double b)->a+b);
+        System.out.println(total);
+
     }
 }
