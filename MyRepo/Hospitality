@@ -1,0 +1,896 @@
+================================================================================================================
+HOSPITALITY
+================================================================================================================
+
+
+1.)CustomerEndPoint
+________________________________________________________________________________________________________________
+package uk.co.imperial.route;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
+
+import net.sitemorph.protostore.CrudException;
+import net.sitemorph.protostore.CrudIterator;
+import net.sitemorph.protostore.CrudStore;
+import net.sitemorph.web.request.Request;
+import net.sitemorph.web.request.RequestProfile;
+import net.sitemorph.web.request.ResourceNotFoundException;
+import net.sitemorph.web.request.Store;
+import uk.co.imperial.helper.Resolver;
+import uk.co.imperial.model.CustomerJson;
+import uk.co.imperial.model.CustomerListJson;
+import uk.co.imperial.model.ErrorMessage;
+import uk.co.imperial.model.ErrorMessage.ErrorCode;
+import uk.co.imperial.model.Hotel.Customer;
+import uk.co.imperial.storage.CustomerStore;
+
+public class CustomerEndPoint extends HttpServlet {
+
+	private static final long serialVersionUID = 1L;
+	private final static Logger LOGGER = LoggerFactory.getLogger(CustomerEndPoint.class);
+	private static final String STR_OK = "201";
+	protected SiteConfig config;
+	private static final String CREATE_PATH = "/";
+	private static final String NAME_AND_ADDRESS_PATH = "customerName=Ranga&customerAddress=Ingiriya";
+
+	/**
+	 * Get method call through out the this doGet method
+	 */
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+		SiteConfig config = ConfigFactory.forRequest(request);
+		Request page = Request.newPageRequest(config).setContext(getServletContext()).setRequest(request)
+				.setResponse(response).setProfile(RequestProfile.JSON).withBasicAuth();
+
+		if (page.cantContinue()) {
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		if (Resolver.notAuthorised(page, config)) {
+			LOGGER.info("Can't continue, not authorised");
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		try {
+               
+			LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<"+page.getPathAsId());
+			// get all customers
+			if (null == page.getPathAsId() || CREATE_PATH.equals(page.getPathAsId())) {
+				CustomerListJson allCustomers = getAllCustomers(page);
+				allCustomers.render(page);
+
+				// get customer by name and address
+
+			} else if (NAME_AND_ADDRESS_PATH.equals(page.getPathAsId())) {
+				CustomerJson customerByNameAndAddress = getCustomerByNameAndAddress(page, config);
+				customerByNameAndAddress.render(page);
+			} else {
+				// get customer by id
+
+				CustomerJson customerById = getCustomerById(page, config);
+				customerById.render(page);
+
+			}
+
+		} catch (CrudException e) {
+			LOGGER.error("Storage error getting Account details", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, e.getMessage());
+		} catch (IOException e) {
+			LOGGER.error("Error writing the Account details", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, "Error getting Account details");
+		} catch (ResourceNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		page.close();
+	}
+
+	/**
+	 * Do method call through out this doPost method
+	 */
+
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+		SiteConfig config = ConfigFactory.forRequest(request);
+		Request page = Request.newPageRequest(config).setContext(getServletContext()).setRequest(request)
+				.setResponse(response).setProfile(RequestProfile.JSON).withBasicAuth();
+
+		if (page.cantContinue()) {
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		if (Resolver.notAuthorised(page, config)) {
+			LOGGER.info("Can't continue, not authorised");
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		try {
+
+			CustomerJson customerJson = new CustomerJson();
+			customerJson.parse(page);
+
+			LOGGER.info("Updating Customer  {}", customerJson.toString());
+
+			if (null == request.getPathInfo() || CREATE_PATH.equals(request.getPathInfo())) {
+				LOGGER.debug("Handling create of customer details");
+
+				createCustomer(customerJson, config);
+			} else {
+				LOGGER.debug("Handling update of Customer details");
+
+				updateAccount(customerJson, page, config);
+			}
+
+			customerJson.render(page);
+
+		} catch (CrudException e) {
+			LOGGER.error("Storage error creating Customer details", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LOGGER.info("Bad request", e);
+			ErrorMessage.send(page, ErrorCode.INVALID_REQUEST, "Invalid Customer details: " + e.getMessage());
+		} catch (ResourceNotFoundException e) {
+			LOGGER.info("Unknown Customer details", e);
+			ErrorMessage.send(page, ErrorCode.RESOURCE_NOT_FOUND, e.getMessage());
+		} catch (IOException e) {
+			LOGGER.error("IOException in create the Customer details", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, "Error creating Customer details");
+		} catch (Exception e) {
+			LOGGER.error("Exception in create the Customer details", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, "Error creating Customer details");
+		}
+
+		page.close();
+
+	}
+
+	/**
+	 * Delete method call through out the this method
+	 */
+	@Override
+	public void doDelete(HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		SiteConfig config = ConfigFactory.forRequest(request);
+		Request page = Request.newPageRequest(config).setContext(getServletContext()).setRequest(request)
+				.setResponse(response).setProfile(RequestProfile.JSON).withBasicAuth();
+
+		if (page.cantContinue()) {
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		if (Resolver.notAuthorised(page, config)) {
+			LOGGER.info("Can't continue, not authorised");
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		try {
+			LOGGER.debug("Handling delete of Customer details");
+
+			// delete Account
+			deleteCustomer(page, config);
+
+		} catch (CrudException e) {
+			LOGGER.error("Storage error deleting Account details", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, e.getMessage());
+		} catch (ResourceNotFoundException e) {
+			LOGGER.info("Unknown Account details", e);
+			ErrorMessage.send(page, ErrorCode.RESOURCE_NOT_FOUND, e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LOGGER.info("Bad request", e);
+			ErrorMessage.send(page, ErrorCode.INVALID_REQUEST, "Cannot delete Account : " + e.getMessage());
+		}
+
+		page.close();
+	}
+
+	/**
+	 * find all customer
+	 * 
+	 * @param page
+	 * @return
+	 * @throws CrudException
+	 */
+	public CustomerListJson getAllCustomers(Request page) throws CrudException {
+
+		Store store = page.getStore();
+		CrudStore<Customer> customerStore = store.getStore(Customer.newBuilder());
+		CrudIterator<Customer> customerIterator = customerStore.read(Customer.newBuilder());
+
+		List<CustomerJson> customerList = Lists.newArrayList();
+		CustomerListJson customerListJson = new CustomerListJson();
+
+		while (customerIterator.hasNext()) {
+			Customer customer = customerIterator.next();
+
+			CustomerJson customerJson = new CustomerJson();
+			customerJson.fromCustomer(customer);
+			customerList.add(customerJson);
+
+		}
+
+		customerIterator.close();
+		customerListJson.setCustomerJsonarray(customerList.toArray(new CustomerJson[customerList.size()]));
+		return customerListJson;
+
+	}
+
+	/**
+	 * 
+	 * get customer by id page.getPathAsId() returns the cutomerId which want to
+	 * delete
+	 * 
+	 * @param page
+	 * @param config
+	 * @return
+	 * @throws CrudException
+	 * @throws ResourceNotFoundException
+	 */
+
+	private CustomerJson getCustomerById(Request page, SiteConfig config)
+			throws CrudException, ResourceNotFoundException {
+
+		if (null == page.getPathAsId()) {
+			throw new ResourceNotFoundException("Customer details not found. Check path");
+		}
+
+		Store store = config.getStore();
+		CrudStore<Customer> customerStore = store.getStore(Customer.newBuilder());
+		CrudIterator<Customer> customerIterator = customerStore.read(Customer.newBuilder().setId(page.getPathAsId()));
+
+		if (!customerIterator.hasNext()) {
+			LOGGER.error("Customer not found: " + page.getPathAsId());
+			customerIterator.close();
+			throw new ResourceNotFoundException("Customer  not found: " + page.getPathAsId());
+		}
+
+		Customer customer = customerIterator.next();
+		CustomerJson customerJson = new CustomerJson();
+		customerJson.fromCustomer(customer);
+
+		customerIterator.close();
+
+		return customerJson;
+	}
+
+	/**
+	 * validate json whether empty or not
+	 * 
+	 * @param json
+	 * @throws IllegalArgumentException
+	 */
+
+	private void validateAccount(CustomerJson json) throws IllegalArgumentException {
+
+		if (null == json.getCustomerId() || json.getCustomerId().trim().isEmpty()) {
+			throw new IllegalArgumentException("Customer id is missing");
+		}
+		if (null == json.getCustomerName() || json.getCustomerName().trim().isEmpty()) {
+			throw new IllegalArgumentException("Customer name  missing");
+		}
+		if (null == json.getCustomerAddress() || json.getCustomerAddress().trim().isEmpty()) {
+			throw new IllegalArgumentException("Customer address is missing");
+		}
+
+	}
+
+	/**
+	 * save customer
+	 * 
+	 * @param json
+	 * @param config
+	 * @throws CrudException
+	 * @throws IOException
+	 * @throws IllegalArgumentException
+	 */
+
+	private void createCustomer(CustomerJson json, SiteConfig config)
+			throws CrudException, IOException, IllegalArgumentException {
+
+		// check required fields for Customer details
+		validateAccount(json);
+
+		Store store = config.getStore();
+		CrudStore<Customer> customerStore = store.getStore(Customer.newBuilder());
+
+		// populate proto model for persistence
+		Customer.Builder cutomerBuilder = Customer.newBuilder();
+		json.toMessage(cutomerBuilder);
+
+		// create Customer
+		Customer customer = customerStore.create(cutomerBuilder);
+
+		// overwrite the json state
+		json.fromCustomer(customer);
+	}
+
+	/**
+	 * update customer page.getPathAsId() returns the customer id which want to
+	 * update
+	 * 
+	 * 
+	 * @param json
+	 * @param page
+	 * @param config
+	 * @throws CrudException
+	 * @throws ResourceNotFoundException
+	 * @throws IllegalArgumentException
+	 * @throws IOException
+	 */
+	private void updateAccount(CustomerJson json, Request page, SiteConfig config)
+			throws CrudException, ResourceNotFoundException, IllegalArgumentException, IOException {
+
+		LOGGER.info("path as id >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"+page.getPathAsId());
+		if (null ==page.getPathAsId()) {
+			throw new ResourceNotFoundException("Customer details not found. Check path");
+		}
+
+		// check required fields for Account details
+		validateAccount(json);
+
+		Store store = config.getStore();
+		CrudStore<Customer> customerstore = store.getStore(Customer.newBuilder());
+
+		CrudIterator<Customer> customerIterator = customerstore.read(Customer.newBuilder().setId(page.getPathAsId()));
+
+		if (!customerIterator.hasNext()) {
+			customerIterator.close();
+			throw new ResourceNotFoundException("Customer  not found: " + page.getPathAsId());
+		}
+		Customer.Builder customerBuilder = customerIterator.next().toBuilder();
+		customerIterator.close();
+
+		// populate proto model update values in db
+		json.toMessage(customerBuilder);
+
+		// update Customer details
+		Customer customer = customerstore.update(customerBuilder);
+
+		// overwrite the json state
+		json.fromCustomer(customer);
+	}
+
+	/**
+	 * delete customer page.getPathAsId() returns the customer id which want to
+	 * delete
+	 * 
+	 * @param page
+	 * @param config
+	 * @throws CrudException
+	 * @throws ResourceNotFoundException
+	 */
+	private void deleteCustomer(Request page, SiteConfig config) throws CrudException, ResourceNotFoundException {
+
+		if (null == page.getPathAsId()) {
+			throw new ResourceNotFoundException("Customer details not found. Check path");
+		}
+
+		Store store = config.getStore();
+		CrudStore<Customer> customerStore = store.getStore(Customer.newBuilder());
+		CrudIterator<Customer> customerIterator = customerStore.read(Customer.newBuilder().setId(page.getPathAsId()));
+
+		if (!customerIterator.hasNext()) {
+			LOGGER.error("Cannot delete Customer , Customer not found: " + page.getPathAsId());
+			customerIterator.close();
+			throw new ResourceNotFoundException("Customer  not found: " + page.getPathAsId());
+		}
+
+		Customer customer = customerIterator.next();
+		customerIterator.close();
+		customerStore.delete(customer);
+
+		// Soft delete Account
+//	        Account.Builder accountBuilder = account.toBuilder().setIsDeleted(true)
+//	                .setModified(now());
+
+		Customer.Builder customerBuilder = customer.toBuilder();
+		customerStore.update(customerBuilder);
+	}
+
+	/**
+	 * get customer by name and address
+	 * http://localhost:8080/api/v1/customers?action=search&customerName=Ranga&customerAddress=Ingiriya
+	 * 
+	 * @param page
+	 * @param config
+	 * @return
+	 * @throws CrudException
+	 * @throws ResourceNotFoundException
+	 */
+	private CustomerJson getCustomerByNameAndAddress(Request page, SiteConfig config)
+			throws CrudException, ResourceNotFoundException {
+
+		if (null == page.getPathAsId()) {
+			throw new ResourceNotFoundException("Customer details not found. Check path");
+		}
+		LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"+page.getPathAsId());
+
+		String pathAsId = page.getPathAsId();
+		String[] split = pathAsId.split("&");
+		String first = split[0];
+		String[] split1 = first.split("=");
+		String customerName = split1[1];
+		LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Name"+customerName);
+
+		String second = split[1];
+		String[] split2 = second.split("=");
+		LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"+split2[0]+" "+split2[1]);
+		
+		String customerAdress = split2[1];
+		LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Address "+customerAdress);
+
+		CustomerStore customerStore = CustomerStore.newBuilder()
+				.setConnection(((DbStore) config.getStore()).getConnection()).build();
+		CrudIterator<Customer> customerIterator = customerStore.getCustomerByNameAndAddress(customerName,
+				customerAdress);
+
+		if (!customerIterator.hasNext()) {
+			customerIterator.close();
+			throw new ResourceNotFoundException("Customer  not found: " + page.getPathAsId());
+		}
+
+		Customer customer = customerIterator.next();
+		customerIterator.close();
+
+		CustomerJson json = new CustomerJson();
+		json.fromCustomer(customer);
+
+		return json;
+	}
+
+}
+
+
+________________________________________________________________________________________________________________________________________________________
+
+
+
+2.)CustomerJson
+
+-------------------------------------------------------------------------------------------------------
+package uk.co.imperial.model;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.sitemorph.web.request.Request;
+import uk.co.imperial.model.Hotel.Customer;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
+//@JsonPropertyOrder({ "customerId", "customerName", "customerAddress" })
+public class CustomerJson {
+
+	private Logger log = LoggerFactory.getLogger(getClass());
+
+	private String customerId;
+	private String customerName;
+	private String customerAddress;
+
+	@JsonIgnore
+	public void fromMessage(Customer customer) throws IOException {
+		fromCustomer(customer);
+	}
+
+	@JsonIgnore
+	public void toMessage(Customer.Builder accountBuilder) throws IOException {
+
+		accountBuilder.setId(getCustomerId());
+		accountBuilder.setName(getCustomerName());
+		accountBuilder.setAddress(getCustomerAddress());
+
+	}
+
+	@JsonIgnore
+	public void parse(Request request) throws IOException {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		CustomerJson json = mapper.readValue(request.getReader(), CustomerJson.class);
+		setCustomerId(json.getCustomerId());
+		setCustomerName(json.getCustomerName());
+		setCustomerAddress(json.getCustomerAddress());
+
+	}
+
+	@JsonIgnore
+	public void render(Request request) throws IOException {
+		PrintWriter out = request.getWriter();
+		ObjectMapper mapper = MapperFactory.getMappper();
+		mapper.writeValue(out, this);
+		out.flush();
+
+	}
+
+	@JsonIgnore
+	public void parse(String data) throws IOException {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		CustomerJson prototype = mapper.readValue(data, CustomerJson.class);
+		fromPrototype(prototype);
+	}
+
+	@JsonIgnore
+	private void fromPrototype(CustomerJson prototype) throws IOException {
+		setCustomerId(prototype.getCustomerId());
+		setCustomerName(prototype.getCustomerName());
+		setCustomerAddress(prototype.getCustomerAddress());
+	}
+
+	@JsonIgnore
+	public void fromCustomer(Customer customer) {
+		setCustomerId(customer.getId());
+		setCustomerName(customer.getName());
+		setCustomerAddress(customer.getAddress());
+
+	}
+
+	public String getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(String customerId) {
+		this.customerId = customerId;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getCustomerAddress() {
+		return customerAddress;
+	}
+
+	public void setCustomerAddress(String customerAddress) {
+		this.customerAddress = customerAddress;
+	}
+
+	@JsonIgnore
+	@Override
+	public String toString() {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		try {
+			return mapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			return super.toString();
+		}
+	}
+
+}
+
+
+____________________________________________________________________________________________________________________________________________
+
+
+3.)CustomerListJson
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+package uk.co.imperial.model;
+
+import java.io.IOException;
+
+import java.io.PrintWriter;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.sitemorph.web.request.Renderable;
+
+public class CustomerListJson implements Renderable {
+
+	private CustomerJson[] customerJsonArray;
+
+	@JsonIgnore
+	@Override
+	public void render(net.sitemorph.web.request.Request page) throws IOException {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		PrintWriter out = page.getWriter();
+		mapper.writeValue(out, this);
+		out.flush();
+
+	}
+
+	public CustomerJson[] getCustomerJsonarray() {
+		return customerJsonArray;
+	}
+
+	public void setCustomerJsonarray(CustomerJson[] customerJsonarray) {
+		customerJsonArray = customerJsonarray;
+	}
+
+}
+
+_____________________________________________________________________________________________________________________________________________________
+
+
+4.)CustomerDTO
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+package uk.co.imperial.model;
+
+public class CustomerDTO {
+
+	private String customerId;
+	private String customerName;
+	private String customerAddress;
+	private String messages;
+	
+	
+	
+
+	public CustomerDTO() {
+		super();
+	}
+
+	public CustomerDTO(String customerId, String customerName, String customerAddress, String messages) {
+		super();
+		this.customerId = customerId;
+		this.customerName = customerName;
+		this.customerAddress = customerAddress;
+		this.messages = messages;
+	}
+
+	public String getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(String customerId) {
+		this.customerId = customerId;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getCustomerAddress() {
+		return customerAddress;
+	}
+
+	public void setCustomerAddress(String customerAddress) {
+		this.customerAddress = customerAddress;
+	}
+
+	public String getMessages() {
+		return messages;
+	}
+
+	public void setMessages(String messages) {
+		this.messages = messages;
+	}
+
+	@Override
+	public String toString() {
+		return "CustomerDTO [customerId=" + customerId + ", customerName=" + customerName + ", customerAddress="
+				+ customerAddress + ", messages=" + messages + "]";
+	}
+	
+	
+
+}
+
+________________________________________________________________________________________________________________________________________
+
+
+5.)CustomerStore
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+package uk.co.imperial.storage;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import net.sitemorph.protostore.CrudException;
+import net.sitemorph.protostore.CrudIterator;
+import net.sitemorph.protostore.DbFieldIterator;
+import uk.co.imperial.model.Hotel.Customer;
+
+public class CustomerStore {
+
+	private PreparedStatement psGetcustomerByAddress;
+
+	private PreparedStatement psGetcustomerByName;
+	
+	private PreparedStatement  psGetCustomerByNameAndAddress;
+
+	public CustomerStore() {
+		super();
+	}
+
+	public static Builder newBuilder() {
+		return new Builder();
+	}
+
+	
+//	start Builder class
+	public static class Builder {
+
+		private Connection connection;
+
+		private Builder() {
+		}
+
+		public Builder setConnection(Connection connection) {
+			this.connection = connection;
+			return this;
+		}
+
+		public CustomerStore build() throws CrudException {
+
+			CustomerStore result = new CustomerStore();
+
+			try {
+
+				result.psGetcustomerByAddress = connection
+						.prepareStatement("SELECT c.*  " + "FROM Customer c " + "WHERE c.address=?");
+
+				result.psGetcustomerByName = connection
+						.prepareStatement("SELECT c.*  " + "FROM Customer c " + "WHERE c.name=?");
+				
+				result.psGetCustomerByNameAndAddress = connection
+						.prepareStatement("SELECT c.*  " + "FROM Customer c " + "WHERE c.name=? and c.address=?");
+
+			} catch (Exception e) {
+				throw new CrudException("Storage error looking up objects ", e);
+			}
+			return result;
+
+		}
+
+	}
+	
+//	end Builder class
+	
+	
+	//call to psGetCustomerByNameAndAddress on build() method
+	 public CrudIterator<Customer> getCustomerByNameAndAddress(String customerName, String customerAdress) throws CrudException {
+	        try {
+	        	psGetCustomerByNameAndAddress.setString(1, customerName);
+	        	psGetCustomerByNameAndAddress.setString(2, customerAdress);
+	            return new DbFieldIterator<Customer>(Customer.newBuilder(), psGetCustomerByNameAndAddress.executeQuery());
+
+	        } catch (SQLException e) {
+	            throw new CrudException("Storage error getting customer Obj by name and address", e);
+	        }
+	    }	
+
+}
+
+_________________________________________________________________________________________________________________________________________
+
+6.)public class DbStore implements net.sitemorph.web.request.Store
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+  
+        factories.put(Hotel.Customer.getDescriptor().getName(), new StoreFactory() {
+            @Override
+            public CrudStore<? extends Message> getStore(Connection connection) throws CrudException {
+                return new DbUrnFieldStore.Builder<Hotel.Customer>()
+                        .setConnection(connection)
+                        .setPrototype(Hotel.Customer.newBuilder())
+                        .setTableName("Customer")
+                        .setUrnColumn("id")
+                        .build();
+            }
+        });
+
+
+
+_________________________________________________________________________________________________________________________________________________
+
+7.)model.proto
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+message Customer {
+  required string id = 1;
+  required string name = 2;
+  optional string address = 3;
+  
+  }
+
+_____________________________________________________________________________________________________________________________________________________
+
+8.)web.xml
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+     <servlet>
+        <servlet-name>room-customer</servlet-name>
+        <servlet-class>uk.co.imperial.route.CustomerEndPoint</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>room-customer</servlet-name>
+        <url-pattern>/v1/customers/*</url-pattern>
+    </servlet-mapping>
+    
+_______________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+_______________________________________________________________________________________________________________________________________________________
+
+customerJson
+CustomerListJson
+CustomerDTO
+CustomerEndPoint
+customerStore(search customet by using name and address)
+commonstore(join operation)
+model.proto -->message customer{
+DBStore-> .setUrnColumn("id") primary key of the table
+
+
+
+
+Database
+table name should be same one as the generated class name(case sensitive(capital and simple letter))
+flyway->resource->db->migrations
+when drop table,must delete that table on 'schema_version' table as well and apply changes 
+
+
+
+Request->mapping data->path info->strValue
+
+
+
+
+
+AccountDetailEndPoint
+
+
+resource->db->migrations
+_______________________________________________________________________________________________________________________________________________________________
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+_______________________________________________________________________________________________________________________________________________________________
+
+
+
+
+
