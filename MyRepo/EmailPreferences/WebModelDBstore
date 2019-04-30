@@ -1,0 +1,43 @@
+ web.xml
+=========================================================================
+ <!-- start email preferences -->
+      <servlet>
+        <servlet-name>email-preferences</servlet-name>
+        <servlet-class>uk.co.imperial.route.EmailPreferencesEndPoint</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>email-preferences</servlet-name>
+        <url-pattern>/v1/email-preferences/*</url-pattern>
+    </servlet-mapping>
+    
+      <!-- end email preferences -->
+
+
+model.proto
+======================================================================================================
+
+
+message EmailPreferences {
+  
+  required string urn = 1;
+  required bool promotion = 2;
+  required bool newsletter = 3;
+  required bool unsubcribeAll = 4;
+  optional string phoneNumber=5;
+  optional bool confirmation=6;
+   optional string accountId = 7;
+  
+  }
+
+DBStore
+=================================================================================================
+	factories.put(Hotel.EmailPreferences.getDescriptor().getName(), new StoreFactory() {
+			@Override
+			public CrudStore<? extends Message> getStore(Connection connection) throws CrudException {
+				return new DbUrnFieldStore.Builder<Hotel.EmailPreferences>().setConnection(connection)
+						.setPrototype(Hotel.EmailPreferences.newBuilder()).setTableName("EmailPreferences")
+						.setUrnColumn("urn").build();
+			}
+		});
+
+	}

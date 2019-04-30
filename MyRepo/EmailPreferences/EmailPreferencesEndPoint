@@ -1,0 +1,275 @@
+package uk.co.imperial.route;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.sitemorph.protostore.CrudException;
+import net.sitemorph.protostore.CrudIterator;
+import net.sitemorph.protostore.CrudStore;
+import net.sitemorph.web.request.Request;
+import net.sitemorph.web.request.RequestProfile;
+import net.sitemorph.web.request.ResourceNotFoundException;
+import net.sitemorph.web.request.Store;
+import uk.co.imperial.helper.Resolver;
+import uk.co.imperial.model.AuthorisationException;
+import uk.co.imperial.model.EmailPreferencesJson;
+import uk.co.imperial.model.ErrorMessage;
+import uk.co.imperial.model.ErrorMessage.ErrorCode;
+import uk.co.imperial.model.Hotel.EmailPreferences;
+import uk.co.imperial.storage.EmailPreferencesStore;
+
+/**
+ * @author Ranga Lankathilaka created on April 25, 2019
+ */
+
+public class EmailPreferencesEndPoint extends HttpServlet {
+
+	private static final long serialVersionUID = 1L;
+	private final static Logger LOGGER = LoggerFactory.getLogger(EmailPreferencesEndPoint.class);
+	private static final String STR_OK = "201";
+	protected SiteConfig config;
+	private static final String CREATE_PATH = "/";
+
+	/**
+	 * Get method call through out the this doGet method
+	 */
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+		SiteConfig config = ConfigFactory.forRequest(request);
+		Request page = Request.newPageRequest(config).setContext(getServletContext()).setRequest(request)
+				.setResponse(response).setProfile(RequestProfile.JSON).withBasicAuth();
+
+		if (page.cantContinue()) {
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		if (Resolver.notAuthorised(page, config)) {
+			LOGGER.info("Can't continue, not authorised");
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		try {
+
+			EmailPreferencesJson emailPreferencesById = getEmailPreferencesById(page, config);
+			emailPreferencesById.render(page);
+
+		} catch (CrudException e) {
+			LOGGER.error("Storage error getting Email Preferences", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, e.getMessage());
+		} catch (IOException e) {
+			LOGGER.error("Error writing the Email Preferences", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, "Error getting Email Preferences");
+		} catch (ResourceNotFoundException e) {
+			e.printStackTrace();
+		} catch (AuthorisationException e) {
+			e.printStackTrace();
+		}
+
+		page.close();
+	}
+
+	/**
+	 * Do method call through out this doPost method
+	 */
+
+	@Override
+	public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+		SiteConfig config = ConfigFactory.forRequest(request);
+		Request page = Request.newPageRequest(config).setContext(getServletContext()).setRequest(request)
+				.setResponse(response).setProfile(RequestProfile.JSON).withBasicAuth();
+
+		if (page.cantContinue()) {
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		if (Resolver.notAuthorised(page, config)) {
+			LOGGER.info("Can't continue, not authorised");
+			ErrorMessage.send(page, ErrorCode.AUTHORISATION_REQUIRED, "Authorisation required");
+			page.close();
+			return;
+		}
+
+		try {
+
+			EmailPreferencesJson emailPreferencesJson = new EmailPreferencesJson();
+			emailPreferencesJson.parse(page);
+
+			LOGGER.info("Updating Email Preferences {}", emailPreferencesJson.toString());
+
+			updateEmailPreferences(emailPreferencesJson, page, config);
+
+			emailPreferencesJson.render(page);
+
+		} catch (CrudException e) {
+			LOGGER.error("Storage error creating Email Preferences", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LOGGER.info("Bad request", e);
+			ErrorMessage.send(page, ErrorCode.INVALID_REQUEST, "Invalid Email Preferences: " + e.getMessage());
+		} catch (ResourceNotFoundException e) {
+			LOGGER.info("Unknown Email Preferences", e);
+			ErrorMessage.send(page, ErrorCode.RESOURCE_NOT_FOUND, e.getMessage());
+		} catch (IOException e) {
+			LOGGER.error("IOException in create the Email Preferences", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, "Error creating Email Preferences");
+		} catch (Exception e) {
+			LOGGER.error("Exception in create the Email Preferences", e);
+			ErrorMessage.send(page, ErrorCode.SERVER_ERROR, "Error creating Email Preferences");
+		}
+
+		page.close();
+
+	}
+
+	/**
+	 * save email preferences information
+	 * 
+	 * @param json
+	 * @param config
+	 * @throws CrudException
+	 * @throws IOException
+	 * @throws IllegalArgumentException
+	 * @throws ResourceNotFoundException
+	 */
+
+	private void createEmailPreferences(EmailPreferencesJson json, SiteConfig config)
+			throws CrudException, IOException, IllegalArgumentException, ResourceNotFoundException {
+
+		// check required fields for Email Preferences details
+		validateEmailPreferences(json);
+
+		Store store = config.getStore();
+		CrudStore<EmailPreferences> emailPreferenceStore = store.getStore(EmailPreferences.newBuilder());
+
+		// populate proto model for persistence
+		EmailPreferences.Builder emailPreferencesBuilder = EmailPreferences.newBuilder();
+		json.toMessage(emailPreferencesBuilder);
+
+		// create Email Preferences
+		EmailPreferences emailPreferences = emailPreferenceStore.create(emailPreferencesBuilder);
+
+		// overwrite the json state
+		json.fromEmailPreferences(emailPreferences);
+	}
+
+	/**
+	 * update email preferences information
+	 * 
+	 * @param json
+	 * @param page
+	 * @param config
+	 * @throws CrudException
+	 * @throws ResourceNotFoundException
+	 * @throws IllegalArgumentException
+	 * @throws IOException
+	 * @throws AuthorisationException
+	 */
+
+	private void updateEmailPreferences(EmailPreferencesJson json, Request page, SiteConfig config)
+			throws CrudException, ResourceNotFoundException, IllegalArgumentException, IOException,
+			AuthorisationException {
+
+		// check required fields for Email Preferences
+		validateEmailPreferences(json);
+
+		Store store = config.getStore();
+		EmailPreferencesStore emailPreferencesStore = EmailPreferencesStore.newBuilder()
+				.setConnection(((DbStore) config.getStore()).getConnection()).build();
+		CrudIterator<EmailPreferences> emailPreferencesIterator = emailPreferencesStore
+				.getEmailPreferencesByAccId(json.getAccountId());
+
+		if (!emailPreferencesIterator.hasNext()) {
+			emailPreferencesIterator.close();
+			createEmailPreferences(json, config);
+		} else {
+
+			CrudStore<EmailPreferences> emailPreferencesstorecrud = store.getStore(EmailPreferences.newBuilder());
+
+			EmailPreferences.Builder emailPreferencesBuilder = emailPreferencesIterator.next().toBuilder();
+			emailPreferencesIterator.close();
+
+			// populate proto model update values in db
+			json.toMessage(emailPreferencesBuilder);
+
+			// update Email Preferences
+			EmailPreferences emailPreferences = emailPreferencesstorecrud.update(emailPreferencesBuilder);
+
+			// overwrite the json state
+			json.fromEmailPreferences(emailPreferences);
+		}
+	}
+
+	/**
+	 * retrieve Email Preferences by account id
+	 * 
+	 * @param page
+	 * @param config
+	 * @return
+	 * @throws CrudException
+	 * @throws ResourceNotFoundException
+	 * @throws AuthorisationException
+	 */
+
+	private EmailPreferencesJson getEmailPreferencesById(Request page, SiteConfig config)
+			throws CrudException, ResourceNotFoundException, AuthorisationException {
+//
+//		LoginModel.Session session = WebConfig.getSession(page);
+//
+//		if (!session.hasAccountId()) {
+//			throw new AuthorisationException("error.message.bad.auth.no.account");
+//		}
+		
+		if (null == page.getPathAsId()) {
+			throw new ResourceNotFoundException("Email Preferences not found. Check path");
+		}
+
+		Store store = config.getStore();
+		EmailPreferencesStore emailPreferencesStore = EmailPreferencesStore.newBuilder()
+				.setConnection(((DbStore) config.getStore()).getConnection()).build();
+		CrudIterator<EmailPreferences> emailPreferencesIterator = emailPreferencesStore
+				.getEmailPreferencesByAccId(page.getPathAsId());
+
+		if (!emailPreferencesIterator.hasNext()) {
+			emailPreferencesIterator.close();
+			throw new ResourceNotFoundException("Email Preferences not found");
+		}
+
+		EmailPreferences emailPreferences = emailPreferencesIterator.next();
+		emailPreferencesIterator.close();
+
+		EmailPreferencesJson json = new EmailPreferencesJson();
+		json.fromEmailPreferences(emailPreferences);
+
+		return json;
+	}
+
+	/**
+	 * validate phone number
+	 * 
+	 * @param json
+	 * @throws IllegalArgumentException
+	 */
+	private void validateEmailPreferences(EmailPreferencesJson json) throws IllegalArgumentException {
+
+		if (null == json.getPhoneNumber() || json.getPhoneNumber().trim().isEmpty()) {
+			throw new IllegalArgumentException("Phone Number is missing");
+		}
+
+	}
+
+}
+

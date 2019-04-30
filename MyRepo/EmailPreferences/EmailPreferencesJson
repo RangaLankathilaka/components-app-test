@@ -1,0 +1,170 @@
+package uk.co.imperial.model;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.sitemorph.web.request.Request;
+import uk.co.imperial.model.Hotel.EmailPreferences;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
+
+/**
+ * 
+ * @author Ranga Lankathilaka created on April 25, 2019
+ * 
+ *         Email preferences for the select preferences type for the user and
+ *         send details about his/her booking
+ *
+ */
+public class EmailPreferencesJson {
+
+	private Logger log = LoggerFactory.getLogger(getClass());
+
+	private boolean promotion;
+	private boolean newsletter;
+	private boolean unsubcribeAll;
+	private String phoneNumber;
+	private boolean confirmation;
+	private String accountId;
+
+	@JsonIgnore
+	public void fromMessage(EmailPreferences emailPreferences) throws IOException {
+		fromEmailPreferences(emailPreferences);
+	}
+
+	@JsonIgnore
+	public void toMessage(EmailPreferences.Builder emailPreferencesBuilder) throws IOException {
+
+		emailPreferencesBuilder.setConfirmation(isConfirmation());
+		emailPreferencesBuilder.setPhoneNumber(getPhoneNumber());
+		emailPreferencesBuilder.setPromotion(isPromotion());
+		emailPreferencesBuilder.setUnsubcribeAll(isUnsubcribeAll());
+		emailPreferencesBuilder.setNewsletter(isNewsletter());
+		emailPreferencesBuilder.setAccountId(getAccountId());
+
+	}
+
+	@JsonIgnore
+	public void parse(Request request) throws IOException {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		EmailPreferencesJson json = mapper.readValue(request.getReader(), EmailPreferencesJson.class);
+
+		setAccountId(json.getAccountId());
+		setConfirmation(json.isConfirmation());
+		setPhoneNumber(json.getPhoneNumber());
+		setPromotion(json.isPromotion());
+		setUnsubcribeAll(json.isUnsubcribeAll());
+		setNewsletter(json.isNewsletter());
+
+	}
+
+	@JsonIgnore
+	public void render(Request request) throws IOException {
+		PrintWriter out = request.getWriter();
+		ObjectMapper mapper = MapperFactory.getMappper();
+		mapper.writeValue(out, this);
+		out.flush();
+
+	}
+
+	@JsonIgnore
+	public void parse(String data) throws IOException {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		EmailPreferencesJson prototype = mapper.readValue(data, EmailPreferencesJson.class);
+		fromPrototype(prototype);
+	}
+
+	@JsonIgnore
+	private void fromPrototype(EmailPreferencesJson prototype) throws IOException {
+
+		setAccountId(prototype.getAccountId());
+		setConfirmation(prototype.isConfirmation());
+		setPhoneNumber(prototype.getPhoneNumber());
+		setPromotion(prototype.isPromotion());
+		setUnsubcribeAll(prototype.isUnsubcribeAll());
+		setNewsletter(prototype.isNewsletter());
+	}
+
+	@JsonIgnore
+	public void fromEmailPreferences(EmailPreferences emailPreferences) {
+
+		setAccountId(emailPreferences.getAccountId());
+		setConfirmation(emailPreferences.getConfirmation());
+		setNewsletter(emailPreferences.getNewsletter());
+		setPhoneNumber(emailPreferences.getPhoneNumber());
+		setPromotion(emailPreferences.getPromotion());
+		setUnsubcribeAll(emailPreferences.getUnsubcribeAll());
+
+	}
+
+	public boolean isPromotion() {
+		return promotion;
+	}
+
+	public void setPromotion(boolean promotion) {
+		this.promotion = promotion;
+	}
+
+	public boolean isNewsletter() {
+		return newsletter;
+	}
+
+	public void setNewsletter(boolean newsletter) {
+		this.newsletter = newsletter;
+	}
+
+	public boolean isUnsubcribeAll() {
+		return unsubcribeAll;
+	}
+
+	public void setUnsubcribeAll(boolean unsubcribeAll) {
+		this.unsubcribeAll = unsubcribeAll;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public boolean isConfirmation() {
+		return confirmation;
+	}
+
+	public void setConfirmation(boolean confirmation) {
+		this.confirmation = confirmation;
+	}
+
+	public String getAccountId() {
+		return accountId;
+	}
+
+	public void setAccountId(String accountId) {
+		this.accountId = accountId;
+	}
+
+	@JsonIgnore
+	@Override
+	public String toString() {
+		ObjectMapper mapper = MapperFactory.getMappper();
+		try {
+			return mapper.writeValueAsString(this);
+		} catch (JsonProcessingException e) {
+			return super.toString();
+		}
+	}
+}
+

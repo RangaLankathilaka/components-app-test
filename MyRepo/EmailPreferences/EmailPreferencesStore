@@ -1,0 +1,76 @@
+package uk.co.imperial.storage;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import net.sitemorph.protostore.CrudException;
+import net.sitemorph.protostore.CrudIterator;
+import net.sitemorph.protostore.DbFieldIterator;
+import uk.co.imperial.model.Hotel.EmailPreferences;
+
+public class EmailPreferencesStore {
+
+	
+	private PreparedStatement  psGetEmailPreferencesByAccId;
+
+	
+
+	public EmailPreferencesStore() {
+		super();
+	}
+
+	public static Builder newBuilder() {
+		return new Builder();
+	}
+
+	
+//	start Builder class
+	public static class Builder {
+
+		private Connection connection;
+
+		private Builder() {
+		}
+
+		public Builder setConnection(Connection connection) {
+			this.connection = connection;
+			return this;
+		}
+
+		public EmailPreferencesStore build() throws CrudException {
+
+			EmailPreferencesStore result = new EmailPreferencesStore();
+
+			try {
+
+			
+				
+				result.psGetEmailPreferencesByAccId = connection
+						.prepareStatement("SELECT c.*  " + "FROM EmailPreferences c " + "WHERE c.accountId=?");
+
+			} catch (Exception e) {
+				throw new CrudException("Storage error looking up objects ", e);
+			}
+			return result;
+
+		}
+
+	}
+	
+//	end Builder class
+	
+	
+	//call to psGetEmailPreferencesByAccId on build() method
+	 public CrudIterator<EmailPreferences> getEmailPreferencesByAccId(String accountId) throws CrudException {
+	        try {
+	        	psGetEmailPreferencesByAccId.setString(1, accountId);
+	        	
+	            return new DbFieldIterator<EmailPreferences>(EmailPreferences.newBuilder(), psGetEmailPreferencesByAccId.executeQuery());
+
+	        } catch (SQLException e) {
+	            throw new CrudException("Storage error getting accountId", e);
+	        }
+	    }	
+}
+
