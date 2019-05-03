@@ -5,7 +5,1077 @@ internal->domain-Customer
 internal->domain->domain-CustomerRepository
 internal->resource-CustomerResource & Impl(rest controller for internal)
 internal->transformer-CustomerTransformer
+internal->service-CustomerService
+internal->service-CustomerServiceImpl
 
 
 feature/ONI-32-Mocroservice-environment-setup-and-inplement-a-test-CRUD
 initial commit
+
+
+
+=======================================================================================
+dto-CustomerDTO
+=======================================================================================
+package com.noetic.upa.domain;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Customer")
+public class Customer implements Serializable{
+
+	
+	@Id
+	@Column(name = "id")
+    private String id;
+	@Column(name = "name")
+    private String name;
+	@Column(name = "address")
+    private String address;
+	public Customer() {
+		super();
+	}
+	public Customer(String id, String name, String address) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.address = address;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	@Override
+	public String toString() {
+		return "Customer [id=" + id + ", name=" + name + ", address=" + address + "]";
+	}
+    
+    
+    
+    
+}
+=============================================================================================================
+
+==============================================================================================================
+exception-CustomerException
+==============================================================================================================
+
+package com.noetic.exception;
+
+public class CustomerException extends Exception {
+
+	public CustomerException() {
+		super();
+	}
+
+	public CustomerException(String message, Throwable cause, boolean enableSuppression, 
+			boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
+	public CustomerException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public CustomerException(String message) {
+		super(message);
+	}
+
+	public CustomerException(Throwable cause) {
+		super(cause);
+	}
+
+}
+=================================================================================================================
+
+==============================================================================================================
+external->resorce->v1-customerResource(rest controller for external)
+==============================================================================================================
+
+package com.noetic.api.resource.v1;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.dto.upa.CustomerDTO;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
+@RequestMapping(value = "/v1/test")
+public interface CustomerResource1 {
+	
+	 // Customer CRUD Operations
+    @ApiOperation(value = "Create Customer request", nickname = "Create Customer",
+            response = ResponseDTO.class, responseContainer = "ResponseDTO",
+            responseReference = "response")
+    
+    
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Found"),
+        @ApiResponse(code = 401, message = "Unauthorized"),
+        @ApiResponse(code = 403, message = "Forbidden"),
+        @ApiResponse(code = 404, message = "Not Found"),
+        @ApiResponse(code = 500, message = "Internal Server Error")
+})
+    @RequestMapping(value = "/customers", method = RequestMethod.POST)
+    public ResponseDTO<?> createCustomer(@RequestBody CustomerDTO customerDTO,
+                                        HttpServletResponse httpServletResponse);
+    
+  //==============================================================================================
+    
+    @ApiOperation(value = "Read Customer request", nickname = "Read Customer",
+            response = ResponseDTO.class, responseContainer = "ResponseDTO",
+            responseReference = "response")
+
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Found"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found"),
+            @ApiResponse(code = 500, message = "Internal Server Error")
+    })
+
+    @RequestMapping(value = "/customer", method = RequestMethod.GET)
+    public ResponseDTO<?> readCustomer(@RequestParam String id, HttpServletResponse httpServletResponse);
+    
+    
+    //==============================================================================================
+
+    @ApiOperation(value = "Read Customer List request", nickname = "Read Customer List",
+            response = ResponseDTO.class, responseContainer = "ResponseDTO",
+            responseReference = "response")
+
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Found"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found"),
+            @ApiResponse(code = 500, message = "Internal Server Error")
+    })
+
+    @RequestMapping(value = "/customers", method = RequestMethod.GET)
+    public ResponseDTO<?> readCustomerList(@RequestParam("page") int page, @RequestParam("size") int size,
+                                          HttpServletResponse httpServletResponse);
+    
+    //==============================================================================================
+
+    @ApiOperation(value = "Update Customer request", nickname = "Update Customer",
+            response = ResponseDTO.class, responseContainer = "ResponseDTO",
+            responseReference = "response")
+
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Found"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found"),
+            @ApiResponse(code = 500, message = "Internal Server Error")
+    })
+
+    @RequestMapping(value = "/customer", method = RequestMethod.PUT)
+    public ResponseDTO<?> updateCustomer(@RequestBody CustomerDTO customerDTO, HttpServletResponse httpServletResponse);
+
+    //==============================================================================================
+    
+    @ApiOperation(value = "Delete Customer request", nickname = "Delete Customer",
+            response = ResponseDTO.class, responseContainer = "ResponseDTO",
+            responseReference = "response")
+
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Found"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not Found"),
+            @ApiResponse(code = 500, message = "Internal Server Error")
+    })
+
+    @RequestMapping(value = "/customer/{id}", method = RequestMethod.DELETE)
+    public ResponseDTO<?> deleteCustomer(@PathVariable String id, HttpServletResponse httpServletResponse);
+
+    //==============================================================================================
+
+
+
+
+}
+
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+external->resorce->v1-customerResourceImpl(rest controller for external)
+==============================================================================================================
+
+package com.noetic.api.resource.v1;
+
+import java.nio.charset.StandardCharsets;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.noetic.api.config.DeployProfileConfig;
+import com.noetic.api.config.DeployProfileConfigFactory;
+import com.noetic.api.util.UniversalPaymentUtil;
+import com.noetic.common.v1.dto.MessageDTO;
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.common.v1.enums.ResultStatus;
+import com.noetic.dto.elavon.BaseResponseDTO;
+import com.noetic.dto.upa.CustomerDTO;
+
+@RestController(value = "UPAResourceCustomerResourceImplV1")
+public class CustomerResourceImpl1 implements CustomerResource1 {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(CustomerResourceImpl1.class);
+	private HttpClient httpClient = HttpClientBuilder.create().build();
+	private ObjectMapper mapper = new ObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+
+	@Value("${default.base.endpoint}")
+	private String baseURL;
+
+	private static final String UTF_8 = "UTF-8";
+	private static final String REQUEST_URL = "RequestURL: {}";
+	private static final String REQUEST_FOR_FETCHING_RECORDS = "Request for fetching records : {}";
+	private static final String RESPONSE_FOR_FETCHING_RECORDS = "Response for fetching records : {}";
+	private static final String CONTENT_TYPE = "Content-Type";
+	private static final String APPLICATION_JASON = "application/json";
+	private static final String CONNECTION = "Connection";
+	private static final String KEEP_ALIVE = "keep-alive";
+
+	@SuppressWarnings("unchecked")
+	public ResponseDTO<?> createCustomer(@RequestBody CustomerDTO customerDTO, 
+			HttpServletResponse httpServletResponse) {
+
+		ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/customer");
+
+			HttpPost httpRequest = new HttpPost(stringRequest.toString());
+			LOGGER.info(REQUEST_URL, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JASON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			String jsonString = mapper.writeValueAsString(customerDTO);
+			LOGGER.info(REQUEST_FOR_FETCHING_RECORDS, jsonString);
+			httpRequest.setEntity(new StringEntity(jsonString, UTF_8));
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, customerDTO.toString(), e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+
+	}
+
+	@SuppressWarnings("unchecked")
+
+	public ResponseDTO<?> readCustomer(@RequestParam String id, HttpServletResponse httpServletResponse) {
+
+		ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		String jsonString = "";
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/customer?id=" + id);
+
+			HttpGet httpRequest = new HttpGet(stringRequest.toString());
+			LOGGER.info(REQUEST_URL, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JASON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, jsonString, e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public ResponseDTO<?> readCustomerList(int page, int size, HttpServletResponse httpServletResponse) {
+		 ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+	        response.setResultStatus(ResultStatus.AWATING);
+	        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	        String jsonString = "";
+
+	        try {
+	            DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+	            baseURL = deployProfileConfig.getInternalBaseUrl();
+
+	            StringBuilder stringRequest = new StringBuilder(
+	                    baseURL + "/internal/upa/customers?page=" + page + "&size=" + size);
+
+	            HttpGet httpRequest = new HttpGet(stringRequest.toString());
+	            LOGGER.info(REQUEST_URL, stringRequest);
+
+	            httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JASON);
+	            httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+
+	            updateAuthorization(deployProfileConfig, httpRequest);
+
+	            HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+	            jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+	            LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+	            response = mapper.readValue(jsonString, ResponseDTO.class);
+
+	        } catch (Exception e) {
+	            updateResponse(response, jsonString, e);
+
+	            response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+	                    : HttpStatus.INTERNAL_SERVER_ERROR.toString());
+	            response.setMessage(new MessageDTO(e.getMessage()));
+	        } finally {
+	            httpServletResponse.setStatus(response.getHttpStatus().value());
+	        }
+
+	        return response;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public ResponseDTO<?> updateCustomer(@RequestBody CustomerDTO customerDTO, 
+			HttpServletResponse httpServletResponse) {
+		 ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+	        response.setResultStatus(ResultStatus.AWATING);
+	        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+	        try {
+	            DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+	            baseURL = deployProfileConfig.getInternalBaseUrl();
+
+	            StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/customer");
+
+	            HttpPut httpRequest = new HttpPut(stringRequest.toString());
+	            LOGGER.info(REQUEST_URL, stringRequest);
+
+	            httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JASON);
+	            httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+
+	            updateAuthorization(deployProfileConfig, httpRequest);
+	            String jsonString = mapper.writeValueAsString(customerDTO);
+	            LOGGER.info(REQUEST_FOR_FETCHING_RECORDS, jsonString);
+	            httpRequest.setEntity(new StringEntity(jsonString, UTF_8));
+
+	            HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+	            jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+	            LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+	            response = mapper.readValue(jsonString, ResponseDTO.class);
+
+	        } catch (Exception e) {
+	            updateResponse(response, customerDTO.toString(), e);
+
+	            response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+	                    : HttpStatus.INTERNAL_SERVER_ERROR.toString());
+	            response.setMessage(new MessageDTO(e.getMessage()));
+	        } finally {
+	            httpServletResponse.setStatus(response.getHttpStatus().value());
+	        }
+
+	        return response;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public ResponseDTO<?> deleteCustomer(@PathVariable String id, HttpServletResponse httpServletResponse) {
+		 ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+	        response.setResultStatus(ResultStatus.AWATING);
+	        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	        String jsonString = "";
+
+	        try {
+	            DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+	            baseURL = deployProfileConfig.getInternalBaseUrl();
+
+	            StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/customer/" + id);
+
+	            HttpDelete httpRequest = new HttpDelete(stringRequest.toString());
+	            LOGGER.info(REQUEST_URL, stringRequest);
+
+	            httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JASON);
+	            httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+
+	            updateAuthorization(deployProfileConfig, httpRequest);
+
+	            HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+	            jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+	            LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+	            response = mapper.readValue(jsonString, ResponseDTO.class);
+
+	        } catch (Exception e) {
+	            updateResponse(response, jsonString, e);
+
+	            response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+	                    : HttpStatus.INTERNAL_SERVER_ERROR.toString());
+	            response.setMessage(new MessageDTO(e.getMessage()));
+	        } finally {
+	            httpServletResponse.setStatus(response.getHttpStatus().value());
+	        }
+
+	        return response;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	private void updateResponse(ResponseDTO<?> response, String message, Exception e) {
+		response.setResultStatus(ResultStatus.FAILED);
+		response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		LOGGER.error("Error  {} ,  {}", message, e);
+		response.setMessage(new MessageDTO(e.getMessage()));
+	}
+
+	/**
+	 * Update Request Header with Basic authorisation
+	 *
+	 * @param deployProfileConfig
+	 * @param httpRequest
+	 */
+	private void updateAuthorization(DeployProfileConfig deployProfileConfig, HttpRequestBase httpRequest) {
+
+		byte[] credentials = Base64.encodeBase64(
+	 (deployProfileConfig.getInternalApiUsername() + ":" + deployProfileConfig.getInternalApiPassword())
+						.getBytes(StandardCharsets.UTF_8));
+
+		httpRequest.setHeader("Authorization", "Basic " + new String(credentials, StandardCharsets.UTF_8));
+	}
+
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->domain-Customer
+==============================================================================================================
+
+
+package com.noetic.upa.domain;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "Customer")
+public class Customer implements Serializable{
+
+	
+	@Id
+	@Column(name = "id")
+    private String id;
+	@Column(name = "name")
+    private String name;
+	@Column(name = "address")
+    private String address;
+	public Customer() {
+		super();
+	}
+	public Customer(String id, String name, String address) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.address = address;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	@Override
+	public String toString() {
+		return "Customer [id=" + id + ", name=" + name + ", address=" + address + "]";
+	}
+    
+    
+    
+    
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->domain->domain-CustomerRepository
+==============================================================================================================
+
+package com.noetic.upa.domain.repository;
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.noetic.upa.domain.Customer;
+
+public interface CustomerRepository extends JpaRepository<Customer, String>{
+
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->resource-CustomerResource(rest controller for internal)
+==============================================================================================================
+
+
+package com.noetic.upa.resource;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.dto.upa.CustomerDTO;
+
+@RequestMapping(value = "/internal/upa", produces = "application/json; charset=UTF-8", consumes = "application/json")
+public interface CustomerResoure {
+	// Customer Crud Endpoints
+	@RequestMapping(value = "/customer", method = RequestMethod.POST)
+	public ResponseDTO<?> saveCustomer(@RequestBody CustomerDTO customerDTO);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customer", method = RequestMethod.GET)
+	public ResponseDTO<?> readCustomer(@RequestParam String id);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customers", method = RequestMethod.GET)
+	public ResponseDTO<?> readCustomerAll(@RequestParam("page") int page, @RequestParam("size") int size);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customer", method = RequestMethod.PUT)
+	public ResponseDTO<?> updateCustomer(@RequestBody CustomerDTO customerDTO);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customer/{id}", method = RequestMethod.DELETE)
+	public ResponseDTO<?> deleteCustomer(@PathVariable String id);
+
+	// ==============================================================================================
+
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->resource-CustomerResourceImpl(rest controller for internal)
+==============================================================================================================
+
+package com.noetic.upa.resource;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.noetic.common.v1.dto.MessageDTO;
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.common.v1.enums.ResultStatus;
+import com.noetic.dto.upa.CustomerDTO;
+import com.noetic.dto.upa.CustomerResponseDTO;
+import com.noetic.exception.CustomerException;
+import com.noetic.upa.service.CustomerService;
+
+@RestController
+public class CustomerResourceImpl implements CustomerResoure{
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(CustomerResourceImpl.class);
+	
+	@Autowired
+	private CustomerService customerService;
+	
+	private static final String ERROR_STRING = "Error requesting {}, error {}";
+
+	public ResponseDTO<?> saveCustomer(@RequestBody CustomerDTO customerDTO) {
+		ResponseDTO<CustomerDTO> response = new ResponseDTO<CustomerDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        MessageDTO message = new MessageDTO();
+
+        try {
+            response.setPayload(customerService.createCustomer(customerDTO));
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            LOGGER.error(ERROR_STRING, customerDTO, e.getMessage());
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            message.setMessage(e.getMessage());
+            response.setMessage(message);
+        }
+
+        return response;
+
+	}
+
+	public ResponseDTO<?> readCustomer(@RequestParam String id) {
+		ResponseDTO<CustomerDTO> response = new ResponseDTO<CustomerDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+		CustomerDTO result = null;
+        String message = null;
+
+        try {
+            result = customerService.readCustomer(id);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.OK);
+            LOGGER.debug("Customer read {}", result);
+
+        } catch (CustomerException tx) {
+            LOGGER.error("Customer creating {}, error {}", id, tx.getMessage());
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, id, e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            MessageDTO messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+
+        return response;
+
+	}
+
+	public ResponseDTO<?> readCustomerAll(int page, int size) {
+		
+		ResponseDTO<CustomerResponseDTO> response = new ResponseDTO<CustomerResponseDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        List<CustomerDTO> result = null;
+        CustomerResponseDTO resultList = new CustomerResponseDTO();
+        String message = null;
+
+        try {
+            result = customerService.readCustomerAll(page, size);
+            resultList.setCustomerList(result);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.OK);
+            LOGGER.debug(" Customer List read {}", result);
+
+        } catch (CustomerException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Customer List reading error {}", tx.getMessage());
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            MessageDTO messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(resultList);
+        }
+
+        return response;
+
+	}
+
+	public ResponseDTO<?> updateCustomer(@RequestBody CustomerDTO customerDTO) {
+		ResponseDTO<CustomerDTO> response = new ResponseDTO<CustomerDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        CustomerDTO result = null;
+        String message = null;
+        try {
+            result = customerService.updateCustomer(customerDTO);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.CREATED);
+            LOGGER.debug("Customer updated {}", result);
+
+        } catch (CustomerException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Customer updating {}, error {}", customerDTO, tx.getMessage());
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, customerDTO.toString(), e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            MessageDTO messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+        return response;
+
+	}
+
+	public ResponseDTO<?> deleteCustomer(@PathVariable String id) {
+		
+		ResponseDTO<CustomerDTO> response = new ResponseDTO<CustomerDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        CustomerDTO result = null;
+        String message = null;
+
+        try {
+        	customerService.deleteCustomer(id);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.OK);
+            LOGGER.debug(" Customer deleted");
+
+        } catch (CustomerException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Customer delete {}, error {}", id, tx.getMessage());
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, id, e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            MessageDTO messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+
+        return response;
+
+	}
+
+}
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->transformer-CustomerTransformer
+==============================================================================================================
+
+package com.noetic.upa.transformer;
+
+import org.springframework.stereotype.Component;
+
+import com.noetic.dto.upa.CustomerDTO;
+import com.noetic.exception.TransformerException;
+import com.noetic.upa.domain.Customer;
+
+@Component
+public class CustomerTransformer extends AbstractTransformer<Customer, CustomerDTO> {
+
+	@Override
+	public CustomerDTO transformDomainToDTO(Customer domain) throws TransformerException {
+
+		CustomerDTO dto = new CustomerDTO();
+
+		dto.setId(domain.getId());
+		dto.setName(domain.getName());
+		dto.setAddress(domain.getAddress());
+
+		return dto;
+	}
+
+	@Override
+	public Customer transformDTOToDomain(CustomerDTO dto) throws TransformerException {
+
+		Customer domain = new Customer();
+
+		domain.setId(dto.getId());
+		domain.setName(dto.getName());
+		domain.setAddress(dto.getAddress());
+		return domain;
+	}
+
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->service-CustomerService
+==============================================================================================================
+
+
+package com.noetic.upa.service;
+
+import java.util.List;
+
+import com.noetic.dto.upa.CustomerDTO;
+import com.noetic.exception.CustomerException;
+import com.noetic.exception.TransformerException;
+
+public interface CustomerService {
+
+	public CustomerDTO createCustomer(CustomerDTO customerDTO) throws CustomerException,TransformerException;
+
+	public CustomerDTO readCustomer(String id) throws CustomerException,TransformerException;
+
+	public List<CustomerDTO> readCustomerAll(int page, int size) throws CustomerException,TransformerException;
+
+	public CustomerDTO updateCustomer(CustomerDTO customerDTO) throws CustomerException, TransformerException;
+
+	public void deleteCustomer(String id) throws CustomerException;
+
+}
+
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->service-CustomerServiceImpl
+==============================================================================================================
+
+package com.noetic.upa.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.noetic.dto.upa.CustomerDTO;
+import com.noetic.exception.CustomerException;
+import com.noetic.exception.TransformerException;
+import com.noetic.upa.domain.Customer;
+import com.noetic.upa.domain.repository.CustomerRepository;
+import com.noetic.upa.transformer.CustomerTransformer;
+
+@Service
+@Transactional
+public class CustomerServiceImpl implements CustomerService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(CustomerServiceImpl.class);
+	@Autowired
+	private CustomerRepository customerRepository;
+
+	@Autowired
+	CustomerTransformer customerTransformer;
+
+	private static final String CUSTOMER_NOT_FOUND = "Customer not found";
+	private static final String ERROR_OCCURED = "Error occured: {} ";
+
+	public CustomerDTO createCustomer(CustomerDTO customerDTO) throws CustomerException, TransformerException {
+		Customer customer = null;
+		if (customerDTO == null) {
+			throw new CustomerException("Customer is empty");
+		} else {
+			customer = customerRepository.save(customerTransformer.transformDTOToDomain(customerDTO));
+			customerDTO = customerTransformer.transformDomainToDTO(customer);
+		}
+
+		return customerDTO;
+	}
+
+	public CustomerDTO readCustomer(String id) throws CustomerException, TransformerException {
+		Customer customer = customerRepository.findOne(id);
+		if (customer == null) {
+			throw new CustomerException(CUSTOMER_NOT_FOUND);
+		} else {
+			return customerTransformer.transformDomainToDTO(customer);
+		}
+	}
+
+	public List<CustomerDTO> readCustomerAll(int page, int size) throws CustomerException {
+
+		Page<Customer> customerList = null;
+		List<CustomerDTO> customerDTOList = new ArrayList<CustomerDTO>();
+		CustomerDTO customerDTO = null;
+		Pageable pageRequest = createPageRequest(page, size);
+
+		try {
+			customerList = customerRepository.findAll(pageRequest);
+
+			if (customerList == null) {
+				throw new CustomerException("Customer List not found.");
+			} else {
+
+				for (Customer customer : customerList) {
+
+					customerDTO = customerTransformer.transformDomainToDTO(customer);
+					customerDTOList.add(customerDTO);
+				}
+			}
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+		return customerDTOList;
+	}
+
+	public CustomerDTO updateCustomer(CustomerDTO customerDTO) throws CustomerException, TransformerException {
+
+		Customer customer = customerRepository.findOne(customerDTO.getId());
+		if (customer == null) {
+			throw new CustomerException(CUSTOMER_NOT_FOUND);
+		} else {
+			customer = customerRepository.save(customerTransformer.transformDTOToDomain(customerDTO));
+			customerDTO = customerTransformer.transformDomainToDTO(customer);
+		}
+
+		return customerDTO;
+	}
+
+	public void deleteCustomer(String id) throws CustomerException {
+		Customer customer = customerRepository.findOne(id);
+
+		if (customer == null) {
+			throw new CustomerException("Customer not found for the given id.");
+		} else {
+			customerRepository.delete(id);
+		}
+	}
+
+	private Pageable createPageRequest(int page, int size) {
+		return new PageRequest(page, size);
+	}
+
+}
+
