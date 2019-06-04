@@ -1,0 +1,200 @@
+ 
+//there are different type of hotels,It get from entry and add hotel object(code,name,address) to array
+//(structure)
+$relatedHotels = [];
+                foreach ($entry->relatedHotelList as $relatedHotel) {
+                    $relatedHotels[] = [
+                        'hotel-code' => $relatedHotel->hotelCode,
+                        'hotel-name' => $relatedHotel->hotelName,
+                        "hotel-address-line-1" => $relatedHotel->hotelAddressLine1,
+                        "hotel-address-line-2" => $relatedHotel->hotelAddressLine2,
+                    ];
+                }
+
+
+
+
+
+
+finally return 
+
+ return [
+                    'restaurant-code' => $entry->restaurantCode,
+                    'restaurant-name' => $entry->restaurantName,
+                    'restaurant-type' => $restaurantTypes,
+                    'restaurant-featured-image-url' => $restaurantFeaturedImageUrl, 
+                    'restaurant-image-list' => $restaurantImageBlocks,
+                    'restaurant-details' => $entry->restaurantDetails,
+                    'related-hotel-list' => $relatedHotels,
+
+                    'usual-opening-time-label' => $entry->usualOpeningTimeLabel,
+                    'usual-opening-time-value' => $entry->usualOpeningTimeValue,
+                    'special-opening-time-label' => $entry->specialOpeningTimeLabel,
+                    'special-opening-time-value' => $entry->specialOpeningTimeValue,
+                    'food-serving-label' => $entry->foodServingLabel,
+                    'food-serving-time' => $entry->foodServingTime,
+                    'food-serving-cuisine-label' => $entry->foodServingCuisineLabel,
+                    'food-serving-cuisine-types' => $cuisineTypes,
+                ];
+
+
+
+===================================================================================================================
+
+  //Getting URLs from image asset list----------------
+                $aboutImageBlocks = [];
+                foreach ($entry->aboutImageList as $block) {
+                    $aboutImage = $block->aboutImage->first();
+                    $aboutImageUrl = null;
+                    if ($aboutImage) {
+                        $aboutImageUrl = $aboutImage->getVolume()->url . 'images/' . $aboutImage->getUri();
+                    }
+                    $aboutImageBlocks[] = [
+                        'image-text' => $block->aboutImageText,
+                        'image-url' => $aboutImageUrl,
+                    ];
+                }
+
+
+
+
+
+
+ return [
+                    'page-title' => $entry->pageTitle,
+                    'about-images' => $aboutImageBlocks,
+                    'family-history-heading' => $entry->familyHistoryHeading,
+                    'family-history-sub-heading' => $entry->familyHistorySubHeading,
+                    'history-details' => $entry->historyDetails,
+                    'our-hotels-heading' => $entry->ourHotelsHeading,
+                    'our-hotels-images' => $hotelsImageBlocks,
+                    'year-history-heading' => $entry->historyHeading,
+                    'year-history-blocks' => $yearHistoryBlocks,
+                    'feature-highlight-blocks' => $featureBlocks,
+                ];
+
+
+
+
+
+======================================================================================================================
+plain text
+____________
+
+return [
+                    'page-title' => $entry->pageTitle
+]
+
+
+
+
+matrix
+_____________
+
+
+  $featureBlocks = [];
+                foreach ($entry->featureHighlight as $block) {
+                    $featureBlocks[] = [
+                        'feature-heading' => $block->featureHeading,
+                        'feature-summary' => $block->featureSummary,
+                    ];
+                }
+
+
+
+return [
+                'feature-highlight-blocks' => $featureBlocks
+]
+
+
+
+=====================================================================================================================
+Setting->fields->New Group 
+then go to group ->new field(translate for each language)
+
+Setting -> section -> New Section(single,structure,channel)
+create section and go to edit entry type
+drag and drop(created field)
+
+go to Entries to add GUI label name
+
+
+===========================================================================================================================
+
+
+<?php
+namespace config\endpoints;
+
+use craft\elements\Entry;
+use craft\helpers\UrlHelper;
+
+class BookingBasketPage
+{
+
+    public static function index()
+    {
+        return [
+            'serializer' => 'jsonFeed',
+            'elementType' => Entry::class,
+            'criteria' => [
+                'section' => 'bookingBasketContent'
+            ],
+            'transformer' => function (Entry $entry) {
+
+                $hotelsBlocks = [];
+                $hotelEntries = Entry::find()->section('Hotels')->all();
+                foreach ($hotelEntries as $hotelEntry) {
+
+                    $hotelRoomTypesBlocks = [];
+                    foreach ($hotelEntry->hotelRoomTypes as $block) {
+                        $hotelRoomTypesBlocks[] = [
+                            'room-type-code' => $block->roomTypeCode,
+                            'room-type-text' => $block->roomTypeText
+                        ];
+                    }
+                    $hotelsBlocks[] = [
+                        'hotel-code' => $hotelEntry->hotelCode,
+                        'hotel-name' => $hotelEntry->hotelName,
+                        'hotel-room-types-list' => $hotelRoomTypesBlocks
+                    ];
+                }
+
+                return [
+
+                    // registration
+                    'booking-basket-register-button' => $entry->bookingBasketRegisterButtonLabel,
+                    'booking-basket-register-title' => $entry->bookingBasketRegistrationTitleLabel,
+
+                    // login
+                    'booking-basket-login-password' => $entry->bookingBasketPasswordLabel,
+                    'booking-basket-login-button' => $entry->bookingBasketLoginButtonLabel,
+                    'booking-basket-login-email' => $entry->bookingBasketLoginEmailLabel,
+                    'booking-basket-login-forggoten' => $entry->bookingBasketLoginForgottenPasswordLabel,
+                    'booking-basket-login-show' => $entry->bookingBasketLoginPasswordShowLabel,
+                    'booking-basket-login-title' => $entry->bookingBasketLoginTitleLabel,
+
+                    // booking
+                    'booking-basket-remove' => $entry->bookingBasketMenuRoomRemoveLabel,
+                    'booking-basket-night' => $entry->bookingBasketNightLabel,
+                    'booking-basket-nights' => $entry->bookingBasketNightsLabel,
+                    'booking-basket-checkin' => $entry->bookingBasketCheckInLabel,
+                    'booking-basket-checkout' => $entry->bookingBasketCheckOutLabel,
+                    'booking-basket-cross' => $entry->bookingBasketCrossSign,
+                    'booking-basket-euro' => $entry->bookingBasketCurrencyUnitEuroSign,
+                    'booking-basket-starling' => $entry->bookingBasketCurrencyUnitStarlingSign,
+                    'booking-basket-button' => $entry->bookingBasketEditBookingButtonLabel,
+                    'booking-basket-room' => $entry->bookingBasketRoomLabel,
+                    'booking-basket-total' => $entry->bookingBasketRoomTotalLabel,
+                    'booking-basket-slash' => $entry->bookingBasketSlashSign,
+                    'booking-basket-title' => $entry->bookingBasketTitleLabel,
+                    'booking-basket-topay' => $entry->bookingBasketToPayLabel,
+                    'booking-basket-youselected' => $entry->bookingBasketYouSelectedLabel,
+                    'booking-basket-hotels-list' => $hotelsBlocks
+                ];
+            },
+            'pretty' => true
+        ];
+    }
+}
+
+
