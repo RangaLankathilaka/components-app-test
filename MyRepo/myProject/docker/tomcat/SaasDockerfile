@@ -1,0 +1,28 @@
+FROM tomcat:8.5
+RUN apt-get update && apt-get install -y git curl wget vim telnet lsof maven procps apt-transport-https && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ARG PROFILE=
+
+
+ENV JAVA_OPTS="-Xms128m -Xmx1024m -XX:MaxPermSize=256m  -DdeployProfile=$PROFILE"
+
+RUN rm -fr /usr/local/tomcat/webapps/upa-saas
+
+COPY  /internal/target/upa-saas-2017.12-RELEASE/ /usr/local/tomcat/webapps/upa-saas
+
+RUN wget https://artifacts.elastic.co/GPG-KEY-elasticsearch 
+RUN apt-key add GPG-KEY-elasticsearch
+RUN echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" > /etc/apt/sources.list.d/elastic-6.x.list
+RUN apt-get update && apt-get install filebeat 
+
+COPY /docker/tomcat/filebeat.yml /etc/filebeat/filebeat.yml
+
+RUN chmod go-w /etc/filebeat/filebeat.yml
+
+
+ADD /docker/tomcat/init.sh /tomcat/init.sh
+RUN chmod 755 /tomcat/init.sh
+
+RUN /tomcat/init.sh $PROFILE
+
+CMD service filebeat start && /usr/local/tomcat/bin/catalina.sh run
