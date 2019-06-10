@@ -267,15 +267,15 @@ class BookingBasketPage
 Matrix->entries->entries
 ================================================================================================================================
 ================================================================================================================================
-
+Matrix
  // Getting Room Detail List----------------
 
                 foreach ($entry->hotelRoomTypeList as $block) {
-                    // room type
+                    // room type(entry under matrix)
                     $hotelRoomTypes = [];
                     foreach ($block->hotelRoomType as $hotelRoomType) {
 
-                        // bed type
+                        // bed type(entry under room type)
                         $roomBedType = [];
                         foreach ($hotelRoomType->bedType as $bedType) {
 
@@ -302,7 +302,7 @@ Matrix->entries->entries
                         ];
                     }
 
-                    // promotion type
+                    // promotion type(entry under matrix)
                     $hotelRoompromotionTypes = [];
                     foreach ($block->hotelRoomPromotionType as $hotelRoomPromotionType) {
 
