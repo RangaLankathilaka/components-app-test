@@ -1,4 +1,45 @@
- 
+=====================================================================================================================
+CRAFT CMS 3
+=====================================================================================================================
+=====================================================================================================================
+Field
+======
+
+Setting->fields->New Group 
+then go to group ->new field(translate for each language)
+
+Section
+========
+
+Setting -> section -> New Section(single,structure,channel)
+create section and go to edit entry type
+drag and drop(created field)
+
+go to Entries to add GUI label name
+
+
+Matrix
+======
+create group
+add field
+go into that
+select field type as Matrix
+create new block
+add field
+filed type == Entries ,you can choose entered group
+filed type == plain text
+filed type == plain assest
+
+Eg:
+Setting-> Field->(Group)Hotel Related->Hotel Room Type List(Room Type(Structure),Assest)->select Field type Matrix-> add block -> add field
+Setting -> Section -> Hotel-> drag and drop
+
+filed type == Entries(must presdefine)
+
+===========================================================================================================================
+
+
+
 //there are different type of hotels,It get from entry and add hotel object(code,name,address) to array
 //(structure)
 $relatedHotels = [];
@@ -40,6 +81,8 @@ finally return
 
 
 ===================================================================================================================
+ASSEST  / IMAGE
+===================================================================================================================
 
   //Getting URLs from image asset list----------------
                 $aboutImageBlocks = [];
@@ -78,6 +121,33 @@ finally return
 
 
 ======================================================================================================================
+ENTRIES
+=========================================================================================================================
+
+
+ $hotelFacilityBlocks = [];
+                
+                foreach ($entry->hotelFacilityTypeList as $hotelFacilityType) {
+                    
+                    // Getting URL from image asset----------------------
+                    $roomFacilityLogo = $hotelFacilityType->hotelFacilityTypeIcon->first();
+                    $roomFacilityLogoUrl = null;
+                    if ($roomFacilityLogo) {
+                        $roomFacilityLogoUrl = $roomFacilityLogo->getVolume()->url . 'images/' . $roomFacilityLogo->getUri();
+                    }
+                    
+                    $hotelFacilityBlocks[] = [
+                        'hotel-facility-type-code' => $hotelFacilityType->hotelFacilityTypeCode,
+                        'hotel-facility-type-label' => $hotelFacilityType->hotelFacilityTypeLabel,
+                        'hotel-facility-type-icon' => $roomFacilityLogoUrl
+                    ];
+                }
+
+
+=========================================================================================================================
+
+
+
 plain text
 ____________
 
@@ -108,15 +178,6 @@ return [
 
 
 
-=====================================================================================================================
-Setting->fields->New Group 
-then go to group ->new field(translate for each language)
-
-Setting -> section -> New Section(single,structure,channel)
-create section and go to edit entry type
-drag and drop(created field)
-
-go to Entries to add GUI label name
 
 
 ===========================================================================================================================
@@ -196,5 +257,76 @@ class BookingBasketPage
         ];
     }
 }
+
+
+
+
+
+================================================================================================================================
+================================================================================================================================
+Matrix->entries->entries
+================================================================================================================================
+================================================================================================================================
+
+ // Getting Room Detail List----------------
+
+                foreach ($entry->hotelRoomTypeList as $block) {
+                    // room type
+                    $hotelRoomTypes = [];
+                    foreach ($block->hotelRoomType as $hotelRoomType) {
+
+                        // bed type
+                        $roomBedType = [];
+                        foreach ($hotelRoomType->bedType as $bedType) {
+
+                            // Getting URL from image asset----------------------
+                            $roomBedLogo = $bedType->roomBedTypeBedIcon->first();
+                            $roomBedLogoUrl = null;
+                            if ($roomBedLogo) {
+                                $roomBedLogoUrl = $roomBedLogo->getVolume()->url . 'images/' . $roomBedLogo->getUri();
+                            }
+
+                            $roomBedType[] = [
+                                'room-bed-type-bed-code' => $bedType->roomBedTypeBedCode,
+                                'room-bed-type-bed-text' => $bedType->roomBedTypeBedText,
+                                'room-bed-type-icon-url' => $roomBedLogoUrl
+                            ];
+                        }
+
+                        $hotelRoomTypes[] = [
+
+                            'room-type-code' => $hotelRoomType->roomTypeCode,
+                            'room-type-text' => $hotelRoomType->roomTypeText,
+                            'room-type-full-text' => $hotelRoomType->roomTypeFullText,
+                            'room-bed-type' => $roomBedType
+                        ];
+                    }
+
+                    // promotion type
+                    $hotelRoompromotionTypes = [];
+                    foreach ($block->hotelRoomPromotionType as $hotelRoomPromotionType) {
+
+                        $hotelRoompromotionTypes[] = [
+
+                            'promotion-code' => $hotelRoomType->promotionCode,
+                            'promotion-name' => $hotelRoomType->promotionName
+                        ];
+                    }
+
+                    $hotelRoomImage = $block->hotelRoomImageGallery->first();
+                    $hotelRoomImageUrl = null;
+                    if ($hotelRoomImage) {
+                        $hotelRoomImageUrl = $hotelRoomImage->getVolume()->url . 'images/' . $hotelRoomImage->getUri();
+                    }
+                    $hotelRoomBlocks[] = [
+
+                        'room-image-url' => $hotelRoomImageUrl,
+                        'hotel-room-types' => $hotelRoomTypes,
+                        'promotion-types' => $hotelRoompromotionTypes,
+                    ];
+                }
+                
+=============================================================================================================================
+
 
 
