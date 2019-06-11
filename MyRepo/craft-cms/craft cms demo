@@ -80,9 +80,36 @@ finally return
 
 
 
-===================================================================================================================
+================================================================================================================================
 ASSEST  / IMAGE
-===================================================================================================================
+================================================================================================================================
+example 1 get one image
+
+ //Getting URL from image asset----------------------
+                $offerAvailableIcon = $entry->roomCommonOfferAvailableIcon->first();
+                $offerAvailableIconUrl = null;
+                if ($offerAvailableIcon) {
+                    $offerAvailableIconUrl = $offerAvailableIcon->getVolume()->url . 'images/' . $offerAvailableIcon->getUri();
+                }
+________________________________________________________________________________________________________________________________
+
+
+example 2 get  image list
+
+ / $hotelRoomImageList = [];
+                    foreach ($block->hotelRoomImageGallery as $hotelRoomImageGallery) {
+                    $hotelRoomImageUrl = null;
+                    if ($hotelRoomImageGallery) {
+                        $hotelRoomImageUrl = $hotelRoomImageGallery->getVolume()->url . 'images/' . $hotelRoomImageGallery->getUri();
+                    }
+                    $hotelRoomImageList[] = [
+                        'room-image-url' => $hotelRoomImageUrl,
+                    ];
+                    }
+________________________________________________________________________________________________________________________________
+
+
+example 3
 
   //Getting URLs from image asset list----------------
                 $aboutImageBlocks = [];
@@ -267,15 +294,15 @@ class BookingBasketPage
 Matrix->entries->entries
 ================================================================================================================================
 ================================================================================================================================
-Matrix
+
  // Getting Room Detail List----------------
 
                 foreach ($entry->hotelRoomTypeList as $block) {
-                    // room type(entry under matrix)
+                    // room type
                     $hotelRoomTypes = [];
                     foreach ($block->hotelRoomType as $hotelRoomType) {
 
-                        // bed type(entry under room type)
+                        // bed type
                         $roomBedType = [];
                         foreach ($hotelRoomType->bedType as $bedType) {
 
@@ -302,7 +329,7 @@ Matrix
                         ];
                     }
 
-                    // promotion type(entry under matrix)
+                    // promotion type
                     $hotelRoompromotionTypes = [];
                     foreach ($block->hotelRoomPromotionType as $hotelRoomPromotionType) {
 
