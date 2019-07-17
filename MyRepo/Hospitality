@@ -890,7 +890,16 @@ ________________________________________________________________________________
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 _______________________________________________________________________________________________________________________________________________________________
 
+Get Column value in Database
 
+There is a value (IMPORTANT) under column named Configkey.
+so below query execute -> config value of config key = "IMPORTANT"
+get() method like search that value in table,then canget column name 
 
+Map<String, RuntimeConfig> mandrillCommonEmail = SharedUtils.getRuntimeConfig(config, "MANDRILL_COMMON");
 
+mandrillCommonEmail.get("IMPORTANT").getConfigValue()
+
+//filter "FROM_EMAIL" value then can get config value
+mandrillCommonEmail.get("FROM_EMAIL").getConfigValue()
 

@@ -1,0 +1,98 @@
+==================================================================================================================
+-----------------------MANDRILL-----------------------------------------------------------------------------------
+==================================================================================================================
+
+IF Condition
+=============
+
+{{#if `operating_system == "OS X"`}}
+  <p>Click here for instructions to install on a Mac</p>
+{{elseif `operating_system == "Windows"`}}
+  <p>Click here for instructions to install on a PC</p>
+{{/if}}
+
+___________________________________________________________________________________________________________________
+
+FOR EACH Condition
+====================
+
+
+        <!-- BEGIN ROOM LOOP // -->
+   {{#each ROOMLIST}}
+		<tr>
+			<td> </td>
+			<td width="5%"> </td>
+			<td> </td>
+		</tr>
+		<tr>
+			<td><strong>{{RMNUMBER}}</strong></td>
+			<td> </td>
+			<td> </td>
+		</tr>
+		<tr>
+			<td><font valign="top">Guest Name (s):</font></td>
+			<td> </td>
+			<td valign="top"><font>{{GNAME}}</font></td>
+		</tr>
+		<tr>
+			<td valign="top"><font>Promotion Name :</font></td>
+			<td> </td>
+			<td valign="top"><font>{{PNAME}}</font></td>
+		</tr>
+		<tr>
+			<td><font>Room type:</font></td>
+			<td width="5%"> </td>
+			<td><font>{{RTYPE}} Room</font></td>
+		</tr>
+		<tr>
+			<td><font>Extras:</font></td>
+			<td width="5%"> </td>
+			<td><font>{{EXTRA}}</font></td>
+		</tr>
+                      {{/each}}
+<!-- // END ROOM LOOP -->
+
+java end
+---------
+
+1.) JsonArray roomlist = new JsonArray();
+
+
+2.) JsonObject room = new JsonObject();
+			room.addProperty("RMNUMBER", "Room#" + roomNumber);
+			room.addProperty("GNAME", roomGuestName.substring(3));
+			room.addProperty("PNAME", rooms[rm].getPromotion().getPromotionName());
+			room.addProperty("RTYPE", roomTypeDescription);
+			if (!packageName.isEmpty()) {
+				room.addProperty("EXTRA", packageName.substring(2));
+			}
+
+			roomlist.add(room);
+
+
+3.) MandrillEmailSend.getMandrillEmailSend().setGlobalMergeVars("ROOMLIST", roomlist);
+
+
+
+___________________________________________________________________________________________________________________
+
+
+URL
+====================
+
+<a href='{{unsub "http://redirecturl.com"}}'>Unsubscribe</a>
+
+
+with placeholder
+-----------------
+
+<a href='{{unsub redirect_merge_var}}'>Unsubscribe</a>
+
+
+ "global_merge_vars": [
+        {
+            "name": "redirect_merge_var",
+            "content": "http://yourdomain.com"
+        }
+    ]
+

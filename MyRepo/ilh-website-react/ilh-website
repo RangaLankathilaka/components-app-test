@@ -1,0 +1,41 @@
+react call to server and server call to ESB
+
+
+1)server-> app.js
+===================
+------------------------------------------------------------------------
+i. app.get("/api/hotels", sendJson(CmsDataController.hotelsList)) <- json map to api/hotels url
+
+------------------------------------------------------------------------
+
+ii. export class CmsDataController {
+static hotelsList(req) {
+
+        const action = { action: "content" }
+        return cmsClient.getHotelDetails()
+            .then(hotelsList => Ok("done", hotelsList))
+            .catch(error => ServerError(error))
+    }
+}
+
+
+------------------------------------------------------------------------
+iii.export const getHotelDetails = () => get("/hotel-page")<-----this is cms url
+
+------------------------------------------------------------------------
+
+2)src->services->BackendClient.js
+===================================
+component-> action -> service(BackendClient)-> server(node)->cms/esb
+
+------------------------------------------------------------------------
+i. getHotelsContent = () => this.get("/api/hotels")
+
+------------------------------------------------------------------------
+
+ii. component-> action -> service(BackendClient)-> server(node)->cms/esb
+
+
+
+
+
