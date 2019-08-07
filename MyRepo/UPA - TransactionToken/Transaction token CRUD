@@ -1,0 +1,2420 @@
+dto-TransactionTokenDTO
+exception-TransactionTokenException
+external->resorce->v1-UniversalPaymentResource & Impl(rest controller for external)
+internal->domain-TransactionToken
+internal->domain->domain-TransactionTokenRepository
+internal->resource-TransactionLoggingResource & Impl(rest controller for internal)
+internal->transformer-TransactionTokenTransformer
+internal->service-TransactionTokenService
+internal->service-TransactionTokenServiceImpl
+
+
+
+=======================================================================================
+dto-TransactionTokenDTO
+=======================================================================================
+package com.noetic.dto.upa;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+
+public class TransactionTokenDTO extends RequestDTO {
+
+    private String urn;
+    private Long created;
+    private String noeticCustomerId;
+    private String paymentSystemReferenceId;
+    private String paymentSystemCustomerId;
+    private String authCode;
+    private String token;
+    private String expiration;
+    private String lastDigits;
+    private Boolean defaultFlag;
+    private String name;
+    private BigDecimal preAuthAmount;
+    private TransactionMasterDTO transactionMasterDTO;
+    private List<TransactionDetailDTO> transactionDetailList;
+
+    public String getUrn() {
+        return urn;
+    }
+
+    public void setUrn(String urn) {
+        this.urn = urn;
+    }
+
+    public Long getCreated() {
+        return created;
+    }
+
+    public void setCreated(Long created) {
+        this.created = created;
+    }
+
+    public String getNoeticCustomerId() {
+        return noeticCustomerId;
+    }
+
+    public void setNoeticCustomerId(String noeticCustomerId) {
+        this.noeticCustomerId = noeticCustomerId;
+    }
+
+    public String getPaymentSystemReferenceId() {
+        return paymentSystemReferenceId;
+    }
+
+    public void setPaymentSystemReferenceId(String paymentSystemReferenceId) {
+        this.paymentSystemReferenceId = paymentSystemReferenceId;
+    }
+
+    public String getPaymentSystemCustomerId() {
+        return paymentSystemCustomerId;
+    }
+
+    public void setPaymentSystemCustomerId(String paymentSystemCustomerId) {
+        this.paymentSystemCustomerId = paymentSystemCustomerId;
+    }
+
+    public String getAuthCode() {
+        return authCode;
+    }
+
+    public void setAuthCode(String authCode) {
+        this.authCode = authCode;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(String expiration) {
+        this.expiration = expiration;
+    }
+
+    public String getLastDigits() {
+        return lastDigits;
+    }
+
+    public void setLastDigits(String lastDigits) {
+        this.lastDigits = lastDigits;
+    }
+
+    public Boolean getDefaultFlag() {
+        return defaultFlag;
+    }
+
+    public void setDefaultFlag(Boolean defaultFlag) {
+        this.defaultFlag = defaultFlag;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public BigDecimal getPreAuthAmount() {
+        return preAuthAmount;
+    }
+
+    public void setPreAuthAmount(BigDecimal preAuthAmount) {
+        this.preAuthAmount = preAuthAmount;
+    }
+
+    public TransactionMasterDTO getTransactionMasterDTO() {
+        return transactionMasterDTO;
+    }
+
+    public void setTransactionMasterDTO(TransactionMasterDTO transactionMasterDTO) {
+        this.transactionMasterDTO = transactionMasterDTO;
+    }
+
+    public List<TransactionDetailDTO> getTransactionDetailList() {
+        return transactionDetailList;
+    }
+
+    public void setTransactionDetailList(List<TransactionDetailDTO> transactionDetailList) {
+        this.transactionDetailList = transactionDetailList;
+    }
+
+}
+=============================================================================================================
+
+==============================================================================================================
+exception-TransactionTokenException
+==============================================================================================================
+
+package com.noetic.exception;
+
+/**
+ * 
+ * Created By Ranga Lankathilaka Jul 23, 2019
+ *
+ */
+
+public class TransactionTokenException extends Exception {
+
+	public TransactionTokenException() {
+		super();
+	}
+
+	public TransactionTokenException(String message, Throwable cause, boolean enableSuppression,
+			boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
+	public TransactionTokenException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public TransactionTokenException(String message) {
+		super(message);
+	}
+
+	public TransactionTokenException(Throwable cause) {
+		super(cause);
+	}
+}
+
+=================================================================================================================
+
+==============================================================================================================
+external->resorce->v1-UniversalPaymentResource(rest controller for external)
+==============================================================================================================
+
+//=========== TRANSACTION TOKEN =============================================================================
+
+    //===============================================================================================
+    
+    /**
+     * Get Payment Token Details using noetic customer ID
+     * 
+     * @param systemId
+     * @param paymentSystemCode
+     * @param customerId
+     * @param xAuthorisation
+     * @param lang
+     * @param httpServletResponse
+     * @return
+     */
+	@ApiOperation(value = "Get Transaction Token Details using noetic customer ID", nickname = "getPaymentToken", 
+		response = ResponseDTO.class, responseContainer = "ResponseDTO", responseReference = "response")
+
+	@ApiResponses({ @ApiResponse(code = 200, message = "Found"), @ApiResponse(code = 401, 
+	message = "Unauthorized"),
+			@ApiResponse(code = 403, message = "Forbidden"), @ApiResponse(code = 404, 
+			message = "Not Found"),
+			@ApiResponse(code = 500, message = "Internal Server Error") })
+
+	
+	@RequestMapping(value = "{paymentProcessor}/getTransactionToken/{customerId}", params = { "action=search",
+			"systemId", "paymentSystemCode" }, method = RequestMethod.GET)
+	public ResponseDTO<?> getTransactionTokenByCustomerId(@RequestParam("systemId") String systemId,
+			@RequestParam("paymentSystemCode") String paymentSystemCode, 
+			@PathVariable("customerId") String customerId,
+			@RequestHeader("X-Authorisation") String xAuthorisation, @RequestHeader("lang") String lang,
+			HttpServletResponse httpServletResponse);
+	
+	/**
+	 * Get All Transaction Token Details
+	 * 
+	 * @param systemId
+	 * @param page
+	 * @param size
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	@ApiOperation(value = "Get All Transaction Token Details", nickname = "getAllTransactionToken", 
+			response = ResponseDTO.class, responseContainer = "ResponseDTO", responseReference = "response")
+
+		@ApiResponses({ @ApiResponse(code = 200, message = "Found"), @ApiResponse(code = 401, 
+		message = "Unauthorized"),
+				@ApiResponse(code = 403, message = "Forbidden"), @ApiResponse(code = 404, 
+				message = "Not Found"),
+				@ApiResponse(code = 500, message = "Internal Server Error") })
+
+	@RequestMapping(value = "{paymentProcessor}/getAllTransactionToken", params = { "action=search",
+			"systemId" }, method = RequestMethod.GET)
+		public ResponseDTO<?> getAllTransactionToken(@RequestParam("systemId") String systemId,
+			@RequestParam("page") String page, @RequestParam("size") String size,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				HttpServletResponse httpServletResponse);
+
+	
+	/**
+	 *Get Transaction token by Id 
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	
+	@ApiOperation(value = "Get Transaction Token Details by Id", nickname = "getTransactionToken", 
+			response = ResponseDTO.class, responseContainer = "ResponseDTO", responseReference = "response")
+
+		@ApiResponses({ @ApiResponse(code = 200, message = "Found"), @ApiResponse(code = 401, 
+		message = "Unauthorized"),
+				@ApiResponse(code = 403, message = "Forbidden"), @ApiResponse(code = 404, 
+				message = "Not Found"),
+				@ApiResponse(code = 500, message = "Internal Server Error") })
+
+		
+		@RequestMapping(value = "{paymentProcessor}/getTransactionToken/{id}", params = { "action=search",
+		"systemId" }, method = RequestMethod.GET)
+		public ResponseDTO<?> getTransactionTokenById(@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang, @PathVariable("id") String id,
+				HttpServletResponse httpServletResponse);
+	
+	
+	
+	
+	/**
+	 * Save Transaction token
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	
+	@ApiOperation(value = "Save Transaction Token Details", nickname = "saveTransactionToken", 
+			response = ResponseDTO.class, responseContainer = "ResponseDTO", responseReference = "response")
+
+		@ApiResponses({ @ApiResponse(code = 200, message = "Found"), @ApiResponse(code = 401, 
+		message = "Unauthorized"),
+				@ApiResponse(code = 403, message = "Forbidden"), @ApiResponse(code = 404, 
+				message = "Not Found"),
+				@ApiResponse(code = 500, message = "Internal Server Error") })
+
+		
+		@RequestMapping(value = "{paymentProcessor}/saveTransactionToken", params = { "action=search",
+		"systemId" }, method = RequestMethod.POST)
+		public ResponseDTO<?> saveTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+				@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				HttpServletResponse httpServletResponse);
+
+	
+	
+	/**
+	 * Update Transaction token
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	
+	@ApiOperation(value = "Update Transaction Token Details", nickname = "updateTransactionToken", 
+			response = ResponseDTO.class, responseContainer = "ResponseDTO", responseReference = "response")
+
+		@ApiResponses({ @ApiResponse(code = 200, message = "Found"), @ApiResponse(code = 401, 
+		message = "Unauthorized"),
+				@ApiResponse(code = 403, message = "Forbidden"), @ApiResponse(code = 404, 
+				message = "Not Found"),
+				@ApiResponse(code = 500, message = "Internal Server Error") })
+
+		
+		@RequestMapping(value = "{paymentProcessor}/updateTransactionToken", params = { "action=search",
+		"systemId" }, method = RequestMethod.PUT)
+		public ResponseDTO<?> updateTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+				@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				HttpServletResponse httpServletResponse);
+	
+	
+	
+	/**
+	 * Delete Transaction token
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	
+	@ApiOperation(value = "Delete Transaction Token Details", nickname = "deleteTransactionToken", 
+			response = ResponseDTO.class, responseContainer = "ResponseDTO", responseReference = "response")
+
+		@ApiResponses({ @ApiResponse(code = 200, message = "Found"), @ApiResponse(code = 401, 
+		message = "Unauthorized"),
+				@ApiResponse(code = 403, message = "Forbidden"), @ApiResponse(code = 404, 
+				message = "Not Found"),
+				@ApiResponse(code = 500, message = "Internal Server Error") })
+
+		
+		@RequestMapping(value = "{paymentProcessor}/deleteTransactionToken/{id}", params = { "action=search",
+		"systemId" }, method = RequestMethod.DELETE)
+		public ResponseDTO<?> deleteTransactionToken(@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				@PathVariable("id") String id,
+				HttpServletResponse httpServletResponse);
+
+
+
+
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+external->resorce->v1-UniversalPaymentResourceImpl(rest controller for external)
+==============================================================================================================
+@RestController(value = "UPAResourceImplV1")
+public class UniversalPaymentResourceImpl implements UniversalPaymentResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UniversalPaymentResourceImpl.class);
+    private HttpClient httpClient = HttpClientBuilder.create().build();
+    private ObjectMapper mapper = new ObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+
+    @Value("${default.base.endpoint}")
+    private String baseURL;
+    
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String CONNECTION = "Connection";
+    public static final String APPLICATION_JSON = "application/json";
+    public static final String X_AUTHORIZATION = "X-Authorisation";
+    public static final String KEEP_ALIVE = "keep-alive";
+    public static final String REQUEST_FOR_FETCHING_RECORDS = "Request for fetching records : {}";
+    public static final String RESPONSE_FOR_FETCHING_RECORDS = "Response for fetching records : {}";
+    public static final String URL_PATH = "/internal/upa/";
+    public static final String LOGGER_STRING = "RequestURL: {}";
+    
+ 
+
+
+
+/**
+     * Get Payment Token Details using noetic customer ID
+     * 
+     * @param systemId
+     * @param paymentSystemCode
+     * @param customerId
+     * @param xAuthorisation
+     * @param lang
+     * @param httpServletResponse
+     * @return
+     */
+
+	@Override
+	public ResponseDTO<?> getTransactionTokenByCustomerId(@RequestParam("systemId") String systemId,
+			@RequestParam("paymentSystemCode") String paymentSystemCode, 
+			@PathVariable("customerId") String customerId,
+			@RequestHeader("X-Authorisation") String xAuthorisation, @RequestHeader("lang") String lang,
+			HttpServletResponse httpServletResponse) {
+		
+		
+		ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		String jsonString = "";
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/transactionLog"
+			+ "/transaction-token/" + customerId + "?action=search&systemId=" + systemId 
+			+ "&paymentSystemCode=" + paymentSystemCode);
+
+			HttpGet httpRequest = new HttpGet(stringRequest.toString());
+			LOGGER.info(LOGGER_STRING, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+		    httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+		    httpRequest.setHeader("lang", lang);
+
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = StreamToString.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, jsonString, e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+
+    
+      }
+	
+	
+	/**
+	 * Get All Transaction Token Details
+	 * 
+	 * @param systemId
+	 * @param page
+	 * @param size
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	@Override
+    public ResponseDTO<?> getAllTransactionToken(@RequestParam("systemId") String systemId,
+			@RequestParam("page") String page, @RequestParam("size") String size,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				HttpServletResponse httpServletResponse){
+			
+		
+		ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
+				, false);
+		String jsonString = "";
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/transactionLog"
+					+ "/transaction-token?action=search&systemId=" + systemId + "&page=" + page 
+			+ "&size=" + size);
+
+			HttpGet httpRequest = new HttpGet(stringRequest.toString());
+			LOGGER.info(LOGGER_STRING, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+		    httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+		    httpRequest.setHeader("lang", lang);
+
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = StreamToString.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, jsonString, e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+
+    
+
+		
+		}
+	
+	
+	/**
+	 *Get Transaction token by Id 
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	public ResponseDTO<?> getTransactionTokenById(@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang, @PathVariable("id") String id,
+				HttpServletResponse httpServletResponse){
+	
+
+		
+		ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
+				, false);
+		String jsonString = "";
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/transactionLog"
+					+ "/transaction-token/" + id + "?action=search&systemId=" + systemId);
+
+			HttpGet httpRequest = new HttpGet(stringRequest.toString());
+			LOGGER.info(LOGGER_STRING, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+		    httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+		    httpRequest.setHeader("lang", lang);
+
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = StreamToString.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, jsonString, e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+
+
+	}
+	
+	
+	
+	/**
+	 * Save Transaction token
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	
+	
+		public ResponseDTO<?> saveTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+				@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				HttpServletResponse httpServletResponse){
+		
+
+
+		ResponseDTO<PayResponseDTO> response = new ResponseDTO<>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+		        try {
+		            DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+		            baseURL = deployProfileConfig.getInternalBaseUrl();
+
+		         
+					StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa"
+							+ "/transactionLog/"
+							+ "transaction-token?action=search&systemId=" + systemId);
+		            
+					HttpPost httpRequest = new HttpPost(stringRequest.toString());
+		            LOGGER.info(LOGGER_STRING, stringRequest);
+
+		            httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+		            httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+		            httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+		            httpRequest.setHeader("lang", lang);
+
+		            updateAuthorization(deployProfileConfig, httpRequest);
+
+		            String jsonString = mapper.writeValueAsString(transactionTokenDTO);
+		            LOGGER.info(REQUEST_FOR_FETCHING_RECORDS, jsonString);
+		            httpRequest.setEntity(new StringEntity(jsonString, HTTP.UTF_8));
+
+		            HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+		            jsonString = UniversalPaymentUtil
+		            		.convertStreamToString(httpResponse.getEntity().getContent());
+
+		            LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+		            response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		        } catch (Exception e) {
+		            updateResponse(response, transactionTokenDTO.toString(), e);
+
+		            response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+		                    : HttpStatus.INTERNAL_SERVER_ERROR.toString());
+		            response.setMessage(new MessageDTO(e.getMessage()));
+		        } finally {
+		            httpServletResponse.setStatus(response.getHttpStatus().value());
+		        }
+
+		        return response;
+
+	}
+
+	
+	
+	/**
+	 * Update Transaction token
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+	public ResponseDTO<?> updateTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestParam("systemId") String systemId, 
+			@RequestHeader("X-Authorisation") String xAuthorisation,
+			@RequestHeader("lang") String lang, HttpServletResponse httpServletResponse) {
+			
+			
+		ResponseDTO<PayResponseDTO> response = new ResponseDTO<>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa" + "/transactionLog/"
+					+ "transaction-token?action=search&systemId=" + systemId);
+
+			HttpPut httpRequest = new HttpPut(stringRequest.toString());
+			LOGGER.info(LOGGER_STRING, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+			httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+			httpRequest.setHeader("lang", lang);
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			String jsonString = mapper.writeValueAsString(transactionTokenDTO);
+			LOGGER.info(REQUEST_FOR_FETCHING_RECORDS, jsonString);
+			httpRequest.setEntity(new StringEntity(jsonString, HTTP.UTF_8));
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, transactionTokenDTO.toString(), e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+		
+	}
+	
+	
+	
+	/**
+	 * Delete Transaction token
+	 * 
+	 * @param systemId
+	 * @param xAuthorisation
+	 * @param lang
+	 * @param id
+	 * @param httpServletResponse
+	 * @return
+	 */
+	
+
+		
+		public ResponseDTO<?> deleteTransactionToken(@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorisation,
+				@RequestHeader("lang") String lang,
+				@PathVariable("id") String id,
+				HttpServletResponse httpServletResponse){
+		
+		
+		ResponseDTO<BaseResponseDTO> response = new ResponseDTO<BaseResponseDTO>();
+		response.setResultStatus(ResultStatus.AWATING);
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
+				, false);
+		String jsonString = "";
+
+		try {
+			DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+			baseURL = deployProfileConfig.getInternalBaseUrl();
+
+			StringBuilder stringRequest = new StringBuilder(baseURL + "/internal/upa/transactionLog"
+					+ "/transaction-token/" + id + "?action=search&systemId=" + systemId);
+
+			HttpDelete httpRequest = new HttpDelete(stringRequest.toString());
+			LOGGER.info(LOGGER_STRING, stringRequest);
+
+			httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+			httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+		    httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+		    httpRequest.setHeader("lang", lang);
+
+
+			updateAuthorization(deployProfileConfig, httpRequest);
+
+			HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+			jsonString = StreamToString.convertStreamToString(httpResponse.getEntity().getContent());
+
+			LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+			response = mapper.readValue(jsonString, ResponseDTO.class);
+
+		} catch (Exception e) {
+			updateResponse(response, jsonString, e);
+
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+					: HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setMessage(new MessageDTO(e.getMessage()));
+		} finally {
+			httpServletResponse.setStatus(response.getHttpStatus().value());
+		}
+
+		return response;
+
+	}
+
+
+	
+	
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->domain-TransactionToken
+==============================================================================================================
+
+package com.noetic.upa.domain;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+
+@Entity
+@Table(name = "TransactionToken")
+public class TransactionToken {
+
+    @Id
+    private String urn;
+    private Long created;
+    private String noeticCustomerId;
+    private String paymentSystemReferenceId;
+    private String paymentSystemCustomerId;
+    private String authCode;
+    private String token;
+    private String expiration;
+    private String lastDigits;
+    private Boolean defaultFlag;
+    private String name;
+    private BigDecimal preAuthAmount;
+
+    @ManyToOne
+    @JoinColumn(name = "masterUrn", nullable = false)
+    private TransactionMaster transactionMaster;
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "transactionToken")
+    private List<TransactionDetail> transactionDetailList;
+
+    public String getUrn() {
+        return urn;
+    }
+
+    public void setUrn(String urn) {
+        this.urn = urn;
+    }
+
+    public Long getCreated() {
+        return created;
+    }
+
+    public void setCreated(Long created) {
+        this.created = created;
+    }
+
+    public String getNoeticCustomerId() {
+        return noeticCustomerId;
+    }
+
+    public void setNoeticCustomerId(String noeticCustomerId) {
+        this.noeticCustomerId = noeticCustomerId;
+    }
+
+    public String getPaymentSystemReferenceId() {
+		return paymentSystemReferenceId;
+	}
+
+	public void setPaymentSystemReferenceId(String paymentSystemReferenceId) {
+		this.paymentSystemReferenceId = paymentSystemReferenceId;
+	}
+
+	public String getPaymentSystemCustomerId() {
+		return paymentSystemCustomerId;
+	}
+
+	public void setPaymentSystemCustomerId(String paymentSystemCustomerId) {
+		this.paymentSystemCustomerId = paymentSystemCustomerId;
+	}
+
+	public String getAuthCode() {
+        return authCode;
+    }
+
+    public void setAuthCode(String authCode) {
+        this.authCode = authCode;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public String getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(String expiration) {
+        this.expiration = expiration;
+    }
+
+    public String getLastDigits() {
+        return lastDigits;
+    }
+
+    public void setLastDigits(String lastDigits) {
+        this.lastDigits = lastDigits;
+    }
+
+    public Boolean getDefaultFlag() {
+        return defaultFlag;
+    }
+
+    public void setDefaultFlag(Boolean defaultFlag) {
+        this.defaultFlag = defaultFlag;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public TransactionMaster getTransactionMaster() {
+        return transactionMaster;
+    }
+
+    public void setTransactionMaster(TransactionMaster transactionMaster) {
+        this.transactionMaster = transactionMaster;
+    }
+
+    public List<TransactionDetail> getTransactionDetailList() {
+        return transactionDetailList;
+    }
+
+    public void setTransactionDetailList(List<TransactionDetail> transactionDetailList) {
+        this.transactionDetailList = transactionDetailList;
+    }
+
+    public BigDecimal getPreAuthAmount() {
+        return preAuthAmount;
+    }
+
+    public void setPreAuthAmount(BigDecimal preAuthAmount) {
+        this.preAuthAmount = preAuthAmount;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("TransactionToken [urn=");
+        builder.append(urn);
+        builder.append(", created=");
+        builder.append(created);
+        builder.append(", noeticCustomerId=");
+        builder.append(noeticCustomerId);
+        builder.append(", paymentSystemReferenceId=");
+        builder.append(paymentSystemReferenceId);
+        builder.append(", paymentSystemCustomerId=");
+        builder.append(paymentSystemCustomerId);
+        builder.append(", authCode=");
+        builder.append(authCode);
+        builder.append(", token=");
+        builder.append(token);
+        builder.append(", expiration=");
+        builder.append(expiration);
+        builder.append(", lastDigits=");
+        builder.append(lastDigits);
+        builder.append(", defaultFlag=");
+        builder.append(defaultFlag);
+        builder.append(", name=");
+        builder.append(name);
+        builder.append(", preAuthAmount=");
+        builder.append(preAuthAmount);
+        builder.append(", transactionMaster=");
+        builder.append(transactionMaster);
+        builder.append(", transactionDetailList=");
+        builder.append(transactionDetailList);
+        builder.append("]");
+        return builder.toString();
+    }
+}
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->domain->domain-TransactionTokenRepository
+==============================================================================================================
+
+@Repository
+public interface TransactionTokenRepository extends JpaRepository<TransactionToken, String> {
+	
+	public final String FIND_BY_NOIETC_CUSTOMER_ID = "SELECT Tt FROM TransactionToken "
+			+ "Tt WHERE Tt.noeticCustomerId=:noeticCustomerId";
+
+    @Query(FIND_BY_NOIETC_CUSTOMER_ID)
+    public List<TransactionToken> getTokenByNoeticCustomerId(@Param("noeticCustomerId") String noeticCustomerId);
+
+}
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->resource-CustomerResource(rest controller for internal)
+==============================================================================================================
+
+
+package com.noetic.upa.resource;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.dto.upa.CustomerDTO;
+
+@RequestMapping(value = "/internal/upa", produces = "application/json; charset=UTF-8", consumes = "application/json")
+public interface CustomerResoure {
+	// Customer Crud Endpoints
+	@RequestMapping(value = "/customer", method = RequestMethod.POST)
+	public ResponseDTO<?> saveCustomer(@RequestBody CustomerDTO customerDTO);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customer", method = RequestMethod.GET)
+	public ResponseDTO<?> readCustomer(@RequestParam String id);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customers", method = RequestMethod.GET)
+	public ResponseDTO<?> readCustomerAll(@RequestParam("page") int page, @RequestParam("size") int size);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customer", method = RequestMethod.PUT)
+	public ResponseDTO<?> updateCustomer(@RequestBody CustomerDTO customerDTO);
+
+	// ==============================================================================================
+
+	@RequestMapping(value = "/customer/{id}", method = RequestMethod.DELETE)
+	public ResponseDTO<?> deleteCustomer(@PathVariable String id);
+
+	// ==============================================================================================
+
+}
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->resource-TransactionLoggingResource(rest controller for internal)
+==============================================================================================================
+
+package com.noetic.upa.resource;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.dto.upa.TransactionMasterDTO;
+import com.noetic.dto.upa.TransactionTokenDTO;
+
+
+@RequestMapping(value = "/internal/upa/transactionLog",
+        produces = "application/json; charset=UTF-8",
+        consumes = "application/json")
+public interface TransactionLoggingResource {
+
+   
+    //=========Transaction Token====================================================================
+    
+    //==============================================================================================
+    
+   /**
+    * 
+    * get all transaction 
+    * 
+    * @param systemId
+    * @param page
+    * @param size
+    * @param xAuthorization
+    * @param lang
+    * @return
+    */
+    
+	@RequestMapping(value = "/transaction-token",  params = { "action=search", "systemId",
+	"page", "size" }, method = RequestMethod.GET)
+	public ResponseDTO<?> getAllTransactionToken(@RequestParam("systemId") String systemId,
+			@RequestParam("page") int page, 
+			@RequestParam("size") int size,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang);
+
+	// ==============================================================================================
+    
+  /**
+   * get transaction token by Id
+   * 
+   * @param id
+   * @param xAuthorization
+   * @param lang
+   * @param systemId
+   * @return
+   */
+	@RequestMapping(value = {"/transaction-token/{id}"},  params = { "action=search", "systemId" },
+			method = RequestMethod.GET)
+	public ResponseDTO<?> getTransactionToken(@PathVariable("id") String id,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId);
+
+	// ==============================================================================================
+	
+	/**
+	 * save Transaction token
+	 * 
+	 * @param transactionTokenDTO
+	 * @param xAuthorization
+	 * @param lang
+	 * @param systemId
+	 * @return
+	 */
+	@RequestMapping(value = "/transaction-token", method = RequestMethod.POST)
+	public ResponseDTO<?> saveTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId);
+
+	// ==============================================================================================
+	
+	/**
+	 * update transaction token
+	 * 
+	 * @param transactionTokenDTO
+	 * @param xAuthorization
+	 * @param lang
+	 * @param systemId
+	 * @return
+	 */
+	@RequestMapping(value = "/transaction-token", method = RequestMethod.PUT)
+	public ResponseDTO<?> updateTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId);
+	
+	
+	// ==============================================================================================
+
+	 /**
+	  * delete transaction token
+	  * 
+	  * @param id
+	  * @param lang
+	  * @param systemId
+	  * @param xAuthorization
+	  * @return
+	  */
+		@RequestMapping(value = "/transaction-token/{id}", method = RequestMethod.DELETE)
+		public ResponseDTO<?> deleteTransactionToken(@PathVariable String id,
+				@RequestHeader("lang") String lang,
+				@RequestParam("systemId") String systemId,
+				@RequestHeader("X-Authorisation") String xAuthorization);
+		
+		
+	// ==============================================================================================
+	
+	/**
+	 * get transaction token by noetic customer Id
+	 * 
+	 * @param systemId
+	 * @param systemCode
+	 * @param customerId
+	 * @param xAuthorization
+	 * @param lang
+	 * @return
+	 */
+	@RequestMapping(value = { "/transaction-token/{customerId}" }, params = { "action=search", "systemId",
+			"paymentSystemCode" }, method = RequestMethod.GET)
+	public ResponseDTO<?> getTransactionTokenByCustomerId(@RequestParam("systemId") String systemId,
+			@RequestParam("paymentSystemCode") String paymentSystemCode,
+			@PathVariable("customerId") String customerId,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang);
+
+}
+
+=================================================================================================================
+
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->resource-TransactionLoggingResource(rest controller for internal)
+==============================================================================================================
+
+package com.noetic.upa.resource;
+
+import java.util.IllformedLocaleException;
+import java.util.List;
+import java.util.Locale;
+
+import org.apache.commons.lang3.LocaleUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.noetic.common.v1.dto.MessageDTO;
+import com.noetic.common.v1.dto.ResponseDTO;
+import com.noetic.common.v1.enums.ResultStatus;
+import com.noetic.dto.elavon.BaseResponseDTO;
+import com.noetic.dto.upa.PaymentProvider;
+import com.noetic.dto.upa.TransactionMasterDTO;
+import com.noetic.dto.upa.TransactionTokenDTO;
+import com.noetic.exception.TransactionLoggingException;
+import com.noetic.exception.TransactionTokenException;
+import com.noetic.upa.domain.ErrorMessage;
+import com.noetic.upa.domain.System;
+import com.noetic.upa.domain.repository.SystemRepository;
+import com.noetic.upa.service.TransactionLoggingService;
+import com.noetic.upa.service.TransactionTokenService;
+import com.noetic.upa.util.ErrorMessageKey;
+import com.noetic.upa.util.LoadErrorMessagesUtil;
+import com.noetic.upa.util.UniversalPaymentUtil;
+
+
+@RestController
+public class TransactionLoggingResourceImpl implements TransactionLoggingResource {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransactionLoggingResourceImpl.class);
+
+    @Autowired
+    private TransactionLoggingService transactionLoggingService;
+    
+    @Autowired
+	private TransactionTokenService transactionTokenService;
+    
+    @Autowired
+    private SystemRepository systemRepository;
+    
+    public static final String DEFAULT_LANGUAGE_CODE = "en";
+    public static final String PROVIDE_SYSTEM_ID = "Please provide the System Id";
+    private static final String ERROR_STRING = "Error requesting {}, error {}";
+    public static final String LOGGER_ERROR_STRING = "Request: {}, error {}";
+    public static final String INCORRECT_CREDINTIALS = "Incorrect credentials. Please try again";
+    public static final String PROVIDE_PAYMENT_PROVIDER = "Please provide the Payment Provider";
+    public static final String INVALID_PAYMENT_PROVIDER = "Invalid Payment Provider.";
+    public static final String INVALID_LANGUAGE_CODE = "Language code is invalid";
+    public static final String DEFAULT_PAYMENT_PROVIDER = "DEFAULT";
+    public static final String UPA433  = "UPA433";
+    public static final String UPA402 = "UPA402";
+    public static final String UPA400 = "UPA400";
+    public static final String UPA401 = "UPA401";
+    public static final String UPA434 = "UPA434";
+    
+    private LoadErrorMessagesUtil loadErrorMessagesUtil = new LoadErrorMessagesUtil();
+  
+
+  
+  //=========Transaction Token=====================================================================
+ 
+   // ==============================================================================================
+    
+    /**
+     * 
+     * get all transaction 
+     * 
+     * @param systemId
+     * @param page
+     * @param size
+     * @param xAuthorization
+     * @param lang
+     * @return
+     */
+    
+    @Override
+	public ResponseDTO<?> getAllTransactionToken(@RequestParam("systemId") String systemId, 
+			@RequestParam("page") int page, @RequestParam("size") int size,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang){
+    	
+
+    	ResponseDTO<List<TransactionTokenDTO>> response = new ResponseDTO<List<TransactionTokenDTO>>();
+        response.setResultStatus(ResultStatus.AWATING);
+        List<TransactionTokenDTO> result = null;
+        String message = null;
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+		
+		  System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+        
+       
+
+        try {
+            
+            result = transactionTokenService.readAllTransactionToken(page, size);
+			response.setResultStatus(ResultStatus.SUCCESSFUL);
+			response.setHttpStatus(HttpStatus.OK);
+			LOGGER.debug("Transaction Token read {}", result);
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Transaction Token creating {}, error {}", tx.getMessage());
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error("Error requesting {}, error {}", e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+
+        return response;
+
+    	
+    }
+
+	// ==============================================================================================
+    
+    /**
+     * get transaction token by Id
+     * 
+     * @param id
+     * @param xAuthorization
+     * @param lang
+     * @param systemId
+     * @return
+     */
+    
+    @Override
+	public ResponseDTO<?> getTransactionToken(@PathVariable("id") String id,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId) {
+		 ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+	        response.setResultStatus(ResultStatus.AWATING);
+	        TransactionTokenDTO result = null;
+	        String message = null;
+	        ErrorMessage errorMessage = null;
+			MessageDTO messageDTO = null;
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+        
+
+	        try {
+	            
+	            result = transactionTokenService.getTransactionTokenById(id);
+				response.setResultStatus(ResultStatus.SUCCESSFUL);
+				response.setHttpStatus(HttpStatus.OK);
+				LOGGER.debug("Transaction Token read {}", result);
+
+	        } catch (TransactionTokenException tx) {
+	            response.setResultStatus(ResultStatus.FAILED);
+	            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+	            LOGGER.error("Transaction Token creating {}, error {}", id, tx.getMessage());
+	            message = tx.getMessage();
+
+	        } catch (Exception e) {
+	            response.setResultStatus(ResultStatus.FAILED);
+	            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+	            LOGGER.error("Error requesting {}, error {}", id, e.getMessage());
+	            message = e.getMessage();
+	        } finally {
+	            response.setHttpCode(response.getHttpStatus() != null
+	                    ? response.getHttpStatus().toString() : null);
+	            messageDTO = new MessageDTO(message);
+	            response.setMessage(messageDTO);
+	            response.setPayload(result);
+	        }
+
+	        return response;
+		}
+	
+
+
+	// ==============================================================================================
+  
+    /**
+	 * save Transaction token
+	 * 
+	 * @param transactionTokenDTO
+	 * @param xAuthorization
+	 * @param lang
+	 * @param systemId
+	 * @return
+	 */
+    
+	public ResponseDTO<?> saveTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId){
+    	
+    	ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        MessageDTO message = new MessageDTO();
+        
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+        
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+     
+
+        try {
+            response.setPayload(transactionTokenService.saveTransactionToken(transactionTokenDTO));
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            LOGGER.error(ERROR_STRING, transactionTokenDTO, e.getMessage());
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            message.setMessage(e.getMessage());
+            response.setMessage(message);
+        }
+
+        return response;
+
+	}
+
+	// ==============================================================================================
+	
+	/**
+	 * update transaction token
+	 * 
+	 * @param transactionTokenDTO
+	 * @param xAuthorization
+	 * @param lang
+	 * @param systemId
+	 * @return
+	 */
+	
+    @Override
+	public ResponseDTO<?> updateTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId){
+    	
+    	ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        TransactionTokenDTO result = null;
+        String message = null;
+        
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+        
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+        
+        try {
+            result = transactionTokenService.updateTransactionToken(transactionTokenDTO);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.CREATED);
+            LOGGER.debug("Customer updated {}", result);
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Customer updating {}, error {}", transactionTokenDTO, tx.getMessage());
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, transactionTokenDTO.toString(), e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+        return response;
+    }
+    
+ // ==============================================================================================
+
+    /**
+	  * delete transaction token
+	  * 
+	  * @param id
+	  * @param lang
+	  * @param systemId
+	  * @param xAuthorization
+	  * @return
+	  */
+    
+	public ResponseDTO<?> deleteTransactionToken(@PathVariable String id, @RequestHeader("lang") String lang,
+			@RequestHeader("X-Authorisation") String xAuthorization,
+			@RequestParam("systemId") String systemId){
+		
+		ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        TransactionTokenDTO result = null;
+        String message = null;
+        
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+        
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+
+        try {
+        	transactionTokenService.deleteTransactionToken(id);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.OK);
+            LOGGER.debug(" Transaction Token deleted");
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Transaction Token delete {}, error {}", id, tx.getMessage());
+            message = tx.getMessage();
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, id, e.getMessage());
+            message = e.getMessage();
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            messageDTO = new MessageDTO(message);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+
+        return response;
+
+
+	}
+	
+	// ==============================================================================================
+	
+	/**
+	 * 
+	 * @param systemId
+	 * @param systemCode
+	 * @param customerId
+	 * @param xAuthorization
+	 * @param lang
+	 * @return
+	 */
+	
+	public ResponseDTO<?> getTransactionTokenByCustomerId(@RequestParam("systemId") String systemId,
+			@RequestParam("paymentSystemCode") String paymentSystemCode,
+			@PathVariable("customerId") String customerId,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang) {
+
+		ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+		
+		  ResponseDTO<List<TransactionTokenDTO>> response = new ResponseDTO<List<TransactionTokenDTO>>();
+	        response.setResultStatus(ResultStatus.AWATING);
+	        List<TransactionTokenDTO> result = null;
+	        String message = null;
+	        
+	        System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+	        
+		if (UniversalPaymentUtil.isNullOrWhiteSpace(paymentSystemCode)) {
+
+			errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER)
+					.get(new ErrorMessageKey(UPA401, lang, null));
+			messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang,
+					"", "400", PROVIDE_PAYMENT_PROVIDER);
+			return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+		}
+	        
+		if (checkPaymentProvider(paymentSystemCode)) {
+			errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER)
+					.get(new ErrorMessageKey(UPA434, lang, null));
+			messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "",
+					"403", INVALID_PAYMENT_PROVIDER);
+			return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO);
+		}
+	       
+
+	        try {
+			result = transactionTokenService.getTransactionTokenByCustomerId(customerId,
+					systemId, paymentSystemCode);
+
+			response.setResultStatus(ResultStatus.SUCCESSFUL);
+			response.setHttpStatus(HttpStatus.OK);
+			LOGGER.debug(" Transaction log read {}", result.toString());
+			
+
+		} catch (TransactionTokenException tx) {
+			response.setResultStatus(ResultStatus.FAILED);
+			response.setHttpStatus(HttpStatus.BAD_REQUEST);
+			LOGGER.error("Transaction token read {}, error {}", customerId, tx.getMessage());
+			message = tx.getMessage();
+
+		} catch (Exception e) {
+			response.setResultStatus(ResultStatus.FAILED);
+			response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error("Error requesting {}, error {}", customerId, e.getMessage());
+			message = e.getMessage();
+		} finally {
+			response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus()
+					.toString() : null);
+		    messageDTO = new MessageDTO(message);
+			response.setMessage(messageDTO);
+			response.setPayload(result);
+		}
+
+	        return response;
+		
+		}
+	
+	
+	/**
+	 * 
+	 * @param errorMessage
+	 * @param lang
+	 * @param system
+	 * @param defaultErrorCode
+	 * @param defaultErrorMessage
+	 * @return
+	 */
+	MessageDTO prepareMessageDTOForUpaErrors(ErrorMessage errorMessage, String lang, String system, 
+			String defaultErrorCode, String defaultErrorMessage) {
+		
+		Locale locale = new Locale(lang);
+	    MessageDTO messageDTO = new MessageDTO();
+	    
+	    if (errorMessage == null) {
+	    	
+	    	messageDTO.setSystem(system);
+		    messageDTO.setLanguage(lang);
+		    messageDTO.setLocale(locale.toString());
+		    messageDTO.setCode(defaultErrorCode);
+		    messageDTO.setMessage(defaultErrorMessage);
+	    }else {
+	    	messageDTO.setSystem(system);
+	 	    messageDTO.setLanguage(lang);
+	 	    messageDTO.setLocale(locale.toString());
+	 	    messageDTO.setCode(errorMessage.getNoeticCode());
+	 	    messageDTO.setMessage(errorMessage.getNoeticMessage());    
+	    }
+	    
+	    return messageDTO;
+	}
+	
+	
+  /**
+   * 
+   * @param resultStatus
+   * @param httpStatus
+   * @param messageDTO
+   * @return
+   */
+	ResponseDTO<BaseResponseDTO> setResponse(ResultStatus resultStatus, HttpStatus httpStatus, 
+    		MessageDTO messageDTO){
+ 				
+			ResponseDTO<BaseResponseDTO> response = new ResponseDTO<>();
+			response.setResultStatus(resultStatus);
+	        response.setHttpStatus(httpStatus); 
+	        response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString() : null);
+	        response.setMessage(messageDTO);
+	        response.setPayload(null);
+	        return response;
+	}
+
+	/**
+	 * validate payment provider
+	 * @param paymentProvider
+	 * @return
+	 */
+	 Boolean checkPaymentProvider(String paymentProvider){
+	        
+	       return(paymentProvider.equals(PaymentProvider.ELAVON_REALEX.getPaymentGateway()) || 
+	               paymentProvider.equals(PaymentProvider.THREEC_WEB2PAY.getPaymentGateway())) ;
+	        
+	    }
+	 
+	 
+	 /**
+	  * Check Language Code
+	  * 
+	  * @param lang
+	  * @return
+	  */
+		Boolean checkLanguageCode(String lang){
+			
+			Locale locale = null;
+			
+			try {
+				 locale = new Locale.Builder().setLanguageTag(lang).build();
+				
+			} catch (IllformedLocaleException e) {
+				LOGGER.error(LOGGER_ERROR_STRING, lang, e.getMessage()); 
+	            return false;
+	        }
+			
+			return LocaleUtils.isAvailableLocale(locale);
+		}
+	    
+	
+}
+
+=================================================================================================================
+
+==============================================================================================================
+internal->transformer-TransactionTokenTransformer
+==============================================================================================================
+
+package com.noetic.upa.transformer;
+
+import org.springframework.stereotype.Component;
+import com.noetic.dto.upa.TransactionTokenDTO;
+import com.noetic.exception.TransformerException;
+import com.noetic.upa.domain.TransactionToken;
+
+
+@Component
+public class TransactionTokenTransformer extends AbstractTransformer<TransactionToken, TransactionTokenDTO> {
+
+    @Override
+    public TransactionTokenDTO transformDomainToDTO(TransactionToken domain) throws TransformerException {
+
+        TransactionTokenDTO dto = new TransactionTokenDTO();
+
+        dto.setUrn(domain.getUrn());
+        dto.setCreated(domain.getCreated());
+        dto.setNoeticCustomerId(domain.getNoeticCustomerId());
+        dto.setPaymentSystemReferenceId(domain.getPaymentSystemReferenceId());
+        dto.setPaymentSystemCustomerId(domain.getPaymentSystemCustomerId());
+        dto.setAuthCode(domain.getAuthCode());
+        dto.setToken(domain.getToken());
+        dto.setExpiration(domain.getExpiration());
+        dto.setLastDigits(domain.getLastDigits());
+        dto.setDefaultFlag(domain.getDefaultFlag());
+        dto.setName(domain.getName());
+        dto.setPreAuthAmount(domain.getPreAuthAmount());
+
+        return dto;
+    }
+
+    @Override
+    public TransactionToken transformDTOToDomain(TransactionTokenDTO dto) throws TransformerException {
+
+        TransactionToken domain = new TransactionToken();
+
+        domain.setUrn(dto.getUrn());
+        domain.setCreated(dto.getCreated());
+        domain.setNoeticCustomerId(dto.getNoeticCustomerId());
+        domain.setPaymentSystemReferenceId(dto.getPaymentSystemReferenceId());
+        domain.setPaymentSystemCustomerId(dto.getPaymentSystemCustomerId());
+        domain.setAuthCode(dto.getAuthCode());
+        domain.setToken(dto.getToken());
+        domain.setExpiration(dto.getExpiration());
+        domain.setLastDigits(dto.getLastDigits());
+        domain.setDefaultFlag(dto.getDefaultFlag());
+        domain.setName(dto.getName());
+        domain.setPreAuthAmount(dto.getPreAuthAmount());
+
+        return domain;
+    }
+}
+
+=================================================================================================================
+
+==============================================================================================================
+internal->service-TransactionTokenService
+==============================================================================================================
+
+
+package com.noetic.upa.service;
+
+
+
+import java.util.List;
+
+import com.noetic.dto.upa.TransactionTokenDTO;
+import com.noetic.exception.TransactionTokenException;
+import com.noetic.exception.TransformerException;
+
+/**
+ * 
+ * Created By Ranga Lankathilaka Jul 23, 2019
+ *
+ */
+
+public interface TransactionTokenService {
+	
+	/**
+	 * Retrieve all transaction token details
+	 * 
+	 * @param page
+	 * @param size
+	 * @return
+	 * @throws TransactionTokenException
+	 */
+	public List<TransactionTokenDTO> readAllTransactionToken(int page, int size) 
+			                                        throws TransactionTokenException;
+	
+	
+	/**
+	 * Retrieve transaction token details by Id
+	 * 
+	 * @param id
+	 * @return
+	 * @throws TransactionTokenException
+	 * @throws TransformerException
+	 */
+	public TransactionTokenDTO getTransactionTokenById(String id)
+			throws TransactionTokenException, TransformerException;
+	
+	/**
+	 * Save transaction token details 
+	 * 
+	 * @param transactionTokenDTO
+	 * @return
+	 * @throws TransactionTokenException
+	 */
+	 public TransactionTokenDTO saveTransactionToken(TransactionTokenDTO transactionTokenDTO)
+	            throws TransactionTokenException;
+	 
+	 /**
+	  * Update transaction token details 
+	  * 
+	  * @param transactionMasterDTO
+	  * @return
+	  * @throws TransactionTokenException
+	  */
+	 public TransactionTokenDTO updateTransactionToken(TransactionTokenDTO transactionTokenDTO)
+	            throws TransactionTokenException;
+	 
+	 /**
+	  * Delete transaction token details
+	  * 
+	  * @param id
+	  * @throws TransactionTokenException
+	  */
+	 public void deleteTransactionToken(String id) throws TransactionTokenException;
+	 
+	 
+	 /**
+	  * Retrieve transaction token details by noetic customer Id
+	  * 
+	  * @param customerId
+	  * @return
+	  * @throws TransactionTokenException
+	  * @throws TransformerException
+	  */
+	public List<TransactionTokenDTO> getTransactionTokenByCustomerId(String noeticCustomerId,
+			String systemId, String systemCode)
+			throws TransactionTokenException, TransformerException;
+	
+
+}
+
+
+
+
+=================================================================================================================
+
+==============================================================================================================
+internal->service-TransactionTokenServiceImpl
+==============================================================================================================
+
+package com.noetic.upa.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.noetic.dto.upa.TransactionDetailDTO;
+import com.noetic.dto.upa.TransactionMasterDTO;
+import com.noetic.dto.upa.TransactionTokenDTO;
+import com.noetic.exception.TransactionTokenException;
+import com.noetic.exception.TransformerException;
+import com.noetic.upa.domain.System;
+import com.noetic.upa.domain.TransactionDetail;
+import com.noetic.upa.domain.TransactionMaster;
+import com.noetic.upa.domain.TransactionToken;
+import com.noetic.upa.domain.repository.TransactionTokenRepository;
+import com.noetic.upa.transformer.TransactionDetailTransformer;
+import com.noetic.upa.transformer.TransactionMasterTransformer;
+import com.noetic.upa.transformer.TransactionTokenTransformer;
+
+/**
+ * 
+ * Created By Ranga Lankathilaka Jul 23, 2019
+ *
+ */
+@Service(value = "TransactionTokenServiceImpl")
+@Transactional
+public class TransactionTokenServiceImpl implements TransactionTokenService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(TransactionTokenServiceImpl.class);
+
+	@Autowired
+	private TransactionTokenRepository transactionTokenRepository;
+
+	@Autowired
+	private TransactionTokenTransformer transactionTokenTransformer;
+	
+	@Autowired
+	private TransactionMasterTransformer transactionMasterTransformer;
+	
+	@Autowired
+	private TransactionDetailTransformer transactionDetailTransformer;
+
+	private static final String TRANSACTION_TOKEN_NOT_FOUND = "Transaction token not found";
+	private static final String ERROR_OCCURED = "Error occured: {} ";
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<TransactionTokenDTO> readAllTransactionToken(int page, int size) throws TransactionTokenException {
+
+		Page<TransactionToken> transactionTokenList = null;
+		List<TransactionTokenDTO> transactionTokenDTOList = new ArrayList<TransactionTokenDTO>();
+		TransactionTokenDTO transactionTokenDTO = null;
+		Pageable pageRequest = createPageRequest(page, size);
+
+			transactionTokenList = transactionTokenRepository.findAll(pageRequest);
+
+			if (transactionTokenList == null) {
+				throw new TransactionTokenException("Transaction Token List not found.");
+			} else {
+
+				for (TransactionToken transactionToken : transactionTokenList) {
+
+					transactionTokenDTO = entityToDtoFullyConversion(transactionToken);
+					transactionTokenDTOList.add(transactionTokenDTO);
+				}
+			}
+		
+		return transactionTokenDTOList;
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public TransactionTokenDTO getTransactionTokenById(String id)
+			throws TransactionTokenException, TransformerException {
+		TransactionToken transactionToken = transactionTokenRepository.findOne(id);
+		if (transactionToken == null) {
+			throw new TransactionTokenException(TRANSACTION_TOKEN_NOT_FOUND);
+		} else {
+			return entityToDtoFullyConversion(transactionToken);
+		}
+
+	}
+
+	@Override
+	public TransactionTokenDTO saveTransactionToken(TransactionTokenDTO transactionTokenDTO)
+			throws TransactionTokenException {
+
+		TransactionToken transactionToken = null;
+
+		if (transactionTokenDTO == null) {
+			throw new TransactionTokenException("Transaction token is empty");
+		} else {
+			
+				TransactionToken dtoToEntity = dtoToEntityFullyConversion(transactionTokenDTO);
+				transactionToken = transactionTokenRepository.save(dtoToEntity);
+				transactionTokenDTO = entityToDtoFullyConversion(transactionToken);
+				LOGGER.info("Transaction token Saved Successfully");
+			
+		}
+
+		return transactionTokenDTO;
+	}
+
+	@Override
+	public TransactionTokenDTO updateTransactionToken(TransactionTokenDTO transactionTokenDTO)
+			throws TransactionTokenException {
+
+		TransactionToken transactionToken = transactionTokenRepository.findOne(transactionTokenDTO.getUrn());
+		if (transactionToken == null) {
+			throw new TransactionTokenException(TRANSACTION_TOKEN_NOT_FOUND);
+		} else {
+				TransactionToken dtoToEntity = dtoToEntityFullyConversion(transactionTokenDTO);
+				transactionToken = transactionTokenRepository.save(dtoToEntity);
+				transactionTokenDTO = entityToDtoFullyConversion(transactionToken);
+				LOGGER.info("Transaction token Updated Successfully");
+		}
+
+		return transactionTokenDTO;
+	}
+
+	@Override
+	public void deleteTransactionToken(String id) throws TransactionTokenException {
+		TransactionToken transactionToken = transactionTokenRepository.findOne(id);
+
+		if (transactionToken == null) {
+			throw new TransactionTokenException("Transaction token not found for the given id.");
+		} else {
+			transactionTokenRepository.delete(id);
+		}
+
+	}
+	
+	
+	@Transactional(readOnly = true)
+	@Override
+	public List<TransactionTokenDTO> getTransactionTokenByCustomerId(String noeticCustomerId, String systemId,
+			String systemCode) throws TransactionTokenException, TransformerException {
+
+		List<TransactionToken> transactionTokenList = transactionTokenRepository
+				.getTokenByNoeticCustomerId(noeticCustomerId);
+		List<TransactionTokenDTO> transactionTokenDtoFilterList = new ArrayList<>();
+		if (transactionTokenList == null) {
+			throw new TransactionTokenException(TRANSACTION_TOKEN_NOT_FOUND);
+		} else {
+			transactionTokenList.forEach(transactionToken -> {
+				TransactionMaster transactionMaster = transactionToken.getTransactionMaster();
+				if (transactionMaster != null) {
+					System system = transactionMaster.getSystem();
+					String paymentSystemCode = transactionMaster.getPaymentSystemCode();
+					if (systemId.equals(system.getId()) && (systemCode.equals(paymentSystemCode))) {
+						TransactionTokenDTO entityToDto = entityToDto(transactionToken);
+						entityToDto.setSystemId(systemId);
+						transactionTokenDtoFilterList.add(entityToDto);
+
+					}
+				}
+
+			});
+			return transactionTokenDtoFilterList;
+		}
+
+	}
+
+	private Pageable createPageRequest(int page, int size) {
+		return new PageRequest(page, size);
+	}
+
+	/**
+	 * copy properties from dto to entity
+	 * 
+	 * @param transactionTokenDTO
+	 * @return
+	 */
+	private TransactionToken dtoToEntity(TransactionTokenDTO transactionTokenDTO) {
+
+		TransactionToken transactionToken = null;
+		try {
+			transactionToken = transactionTokenTransformer.transformDTOToDomain(transactionTokenDTO);
+
+			// transaction master
+			TransactionMasterDTO transactionMasterDTO = transactionTokenDTO.getTransactionMasterDTO();
+
+			TransactionMaster transactionMaster = transactionMasterTransformer
+					.transformDTOToDomain(transactionMasterDTO);
+			transactionToken.setTransactionMaster(transactionMaster);
+
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+
+		return transactionToken;
+	}
+
+	/**
+	 * copy properties from entity to dto
+	 * 
+	 * @param transactionToken
+	 * @return
+	 */
+	private TransactionTokenDTO entityToDto(TransactionToken transactionToken) {
+
+		TransactionTokenDTO transactionTokenDTO = new TransactionTokenDTO();
+		try {
+			TransactionMasterDTO transformDomainToDTO = null;
+			transactionTokenDTO = transactionTokenTransformer.transformDomainToDTO(transactionToken);
+
+			// transaction master
+
+			TransactionMaster transactionMaster = transactionToken.getTransactionMaster();
+			if (transactionMaster != null) {
+				TransactionMasterTransformer 
+				transactionMasterTransformer = new TransactionMasterTransformer();
+
+				TransactionMasterDTO transactionMasterDTO = transactionMasterTransformer
+						.transformDomainToDTO(transactionMaster);
+
+				transactionTokenDTO.setTransactionMasterDTO(transactionMasterDTO);
+			}
+
+
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+		return transactionTokenDTO;
+
+	}
+	
+	
+	
+	/**
+	 * copy properties from dto to entity fully conversion
+	 * 
+	 * @param transactionTokenDTO
+	 * @return
+	 */
+	private TransactionToken dtoToEntityFullyConversion(TransactionTokenDTO transactionTokenDTO) {
+
+		TransactionToken transactionToken = null;
+		try {
+			transactionToken = transactionTokenTransformer.transformDTOToDomain(transactionTokenDTO);
+
+			// transaction master
+			TransactionMasterDTO transactionMasterDTO = transactionTokenDTO.getTransactionMasterDTO();
+
+			TransactionMaster transactionMaster = transactionMasterTransformer
+					.transformDTOToDomain(transactionMasterDTO);
+			transactionToken.setTransactionMaster(transactionMaster);
+
+			// transaction detail
+			List<TransactionDetailDTO> 
+			transactionDetailDtoList = transactionTokenDTO.getTransactionDetailList();
+			ArrayList<TransactionDetail> transactionDetailList = new ArrayList<>();
+
+			if (transactionDetailDtoList != null) {
+				transactionDetailDtoList.forEach(transactionDetailDto -> {
+
+					TransactionDetail transactionDetail;
+					try {
+						transactionDetail = transactionDetailTransformer
+								.transformDTOToDomain(transactionDetailDto);
+						transactionDetailList.add(transactionDetail);
+					} catch (TransformerException e) {
+						LOGGER.error(ERROR_OCCURED, e.getMessage());
+					}
+
+				});
+				transactionToken.setTransactionDetailList(transactionDetailList);
+			}
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+
+		return transactionToken;
+	}
+
+	/**
+	 * copy properties from entity to dto fully conversion
+	 * 
+	 * @param transactionToken
+	 * @return
+	 */
+	private TransactionTokenDTO entityToDtoFullyConversion(TransactionToken transactionToken) {
+
+		TransactionTokenDTO transactionTokenDTO = new TransactionTokenDTO();
+		try {
+			TransactionMasterDTO transformDomainToDTO = null;
+			transactionTokenDTO = transactionTokenTransformer.transformDomainToDTO(transactionToken);
+
+			// transaction master
+
+			TransactionMaster transactionMaster = transactionToken.getTransactionMaster();
+			if (transactionMaster != null) {
+				TransactionMasterTransformer 
+				transactionMasterTransformer = new TransactionMasterTransformer();
+
+				TransactionMasterDTO transactionMasterDTO = transactionMasterTransformer
+						.transformDomainToDTO(transactionMaster);
+
+				transactionTokenDTO.setTransactionMasterDTO(transactionMasterDTO);
+			}
+			// transaction detail
+			List<TransactionDetail> transactionDetailList = transactionToken.getTransactionDetailList();
+			ArrayList<TransactionDetailDTO> transactionDetailDtoList = new ArrayList<>();
+
+			if (transactionDetailList != null) {
+				transactionDetailList.forEach(transactionDetail -> {
+					TransactionDetailDTO transactionDetailDTO;
+
+					try {
+						transactionDetailDTO = transactionDetailTransformer
+								.transformDomainToDTO(transactionDetail);
+						transactionDetailDtoList.add(transactionDetailDTO);
+					} catch (TransformerException e) {
+						LOGGER.error(ERROR_OCCURED, e.getMessage());
+					}
+
+				});
+				transactionTokenDTO.setTransactionDetailList(transactionDetailDtoList);
+			}
+
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+		return transactionTokenDTO;
+
+	}
+	
+
+
+}
+
