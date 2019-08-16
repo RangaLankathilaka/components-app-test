@@ -62,6 +62,14 @@ public class EmailPreferencesEndPoint extends HttpServlet {
 
 		try {
 
+  LoginModel.Session session = WebConfig.getSession(page);
+			if (!session.hasAccountId()) {
+				throw new AuthorisationException("error.message.bad.auth.no.account");
+			}     
+
+
+
+
 			EmailPreferencesJson emailPreferencesById = getEmailPreferencesById(page, config);
 			emailPreferencesById.render(page);
 
@@ -104,6 +112,14 @@ public class EmailPreferencesEndPoint extends HttpServlet {
 		}
 
 		try {
+
+  LoginModel.Session session = WebConfig.getSession(page);
+			if (!session.hasAccountId()) {
+				throw new AuthorisationException("error.message.bad.auth.no.account");
+			}  
+
+   
+
 
 			EmailPreferencesJson emailPreferencesJson = new EmailPreferencesJson();
 			emailPreferencesJson.parse(page);

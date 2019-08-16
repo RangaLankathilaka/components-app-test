@@ -1,3 +1,11 @@
+X - Authorization
+
+
+                        LoginModel.Session session = WebConfig.getSession(page);
+			if (!session.hasAccountId()) {
+				throw new AuthorisationException("error.message.bad.auth.no.account");
+			}                     
+
 ================================================================================================================
 HOSPITALITY
 ================================================================================================================
@@ -68,6 +76,13 @@ public class CustomerEndPoint extends HttpServlet {
 		}
 
 		try {
+
+  LoginModel.Session session = WebConfig.getSession(page);
+			if (!session.hasAccountId()) {
+				throw new AuthorisationException("error.message.bad.auth.no.account");
+			}     
+
+
                
 			LOGGER.info(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<"+page.getPathAsId());
 			// get all customers
@@ -126,6 +141,13 @@ public class CustomerEndPoint extends HttpServlet {
 
 		try {
 
+   LoginModel.Session session = WebConfig.getSession(page);
+			if (!session.hasAccountId()) {
+				throw new AuthorisationException("error.message.bad.auth.no.account");
+			}
+
+
+     
 			CustomerJson customerJson = new CustomerJson();
 			customerJson.parse(page);
 
@@ -188,6 +210,14 @@ public class CustomerEndPoint extends HttpServlet {
 		}
 
 		try {
+
+  LoginModel.Session session = WebConfig.getSession(page);
+			if (!session.hasAccountId()) {
+				throw new AuthorisationException("error.message.bad.auth.no.account");
+			}     
+
+
+
 			LOGGER.debug("Handling delete of Customer details");
 
 			// delete Account
