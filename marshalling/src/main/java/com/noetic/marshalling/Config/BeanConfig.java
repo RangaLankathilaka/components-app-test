@@ -23,7 +23,8 @@ public class BeanConfig {
 	@Bean
 	public TokenWsdlServiceAdapter soapConnector(Jaxb2Marshaller marshaller) {
 		TokenWsdlServiceAdapter client = new TokenWsdlServiceAdapter();
-		client.setDefaultUri(">>>soapUrl eg :- end with asmx<<<");
+		client.setDefaultUri(">>>soapUrl eg :- end with asmx<<<");//to get this one"
+           		// "use soap ui IDE and upload the xsd into it,then create a sample request<<<"
 		client.setMarshaller(marshaller);
 		client.setUnmarshaller(marshaller);
 		return client;
