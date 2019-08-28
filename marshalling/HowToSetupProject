@@ -1,0 +1,6 @@
+1. add wsdl file to wsdl folder at the resource file.
+2. add configarations in to the pom
+3. mention ,where do you want to generate stubs and where is the wsdl file which want to refer.
+4. then run a clean build.if you run that one with out adding wsdl file ,stubs are not generated.
+5.add Bean config,Adapter,controller and dto classes
+    
