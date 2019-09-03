@@ -8,7 +8,180 @@ internal->transformer-TransactionTokenTransformer
 internal->service-TransactionTokenService
 internal->service-TransactionTokenServiceImpl
 
+///////////////////////////////     start resource template       \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/////////////////////////////////////////////////////////////////////////////
 
+===========================================================================================================================
+resource internal template - only change in try catch block
+===========================================================================================================================
+
+
+@Override
+    public ResponseDTO<?> payNoCardRead(@RequestHeader("X-Authorisation") String xAuthorisation, 
+            @RequestHeader("lang") String lang, @RequestBody PayRequestDTO payRequestDTO) {
+        
+        ResponseDTO<PayResponseDTO> responseDTO = new ResponseDTO<>();
+        PayResponseDTO payResponseDTO = null;
+        responseDTO.setResultStatus(ResultStatus.AWATING);   
+        MessageDTO messageDTO = null;
+        ErrorMessage errorMessage = null;
+        
+        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+            lang = DEFAULT_LANGUAGE_CODE;
+        }
+        if (!checkLanguageCode(lang)){
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA433, lang, null));   
+            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+        }
+        if (UniversalPaymentUtil.isNullOrWhiteSpace(payRequestDTO.getSystemId())) {
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA402, lang, null));   
+            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+        }
+        
+        System system = systemRepository.getSpecificSystemList(xAuthorisation, payRequestDTO.getSystemId());
+        if (system == null) {
+            
+             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                     get(new ErrorMessageKey(UPA400, lang, null));   
+             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+        }
+        if (UniversalPaymentUtil.isNullOrWhiteSpace(payRequestDTO.getPaymentProvider())) {
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA401, lang, null));
+            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), 
+                    "403", PROVIDE_PAYMENT_PROVIDER);
+            return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+        }
+        if (paymentProviderUtil.paymentProcessorIsInactive(payRequestDTO
+				.getPaymentProvider(), system.getId())) {
+
+			errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER)
+					.get(new ErrorMessageKey(UPA440, lang, null));
+			messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), "403",
+					PROVIDE_PAYMENT_PROVIDER);
+			return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO);
+		}
+
+        
+        if (!checkPaymentProvider(payRequestDTO.getPaymentProvider())) {
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA434, lang, null));
+            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), 
+                    "403", INVALID_PAYMENT_PROVIDER);
+            return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+        }
+        if (!payRequestDTO.getPaymentProvider().equals(PaymentProvider.THREEC_WEB2PAY.getPaymentGateway())) {
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA434, lang, null));
+            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), 
+                    "403", INVALID_PAYMENT_PROVIDER);
+            return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO);  
+            
+        }else {
+            
+            try {
+                payResponseDTO = threecPaymentService.payNoCardRead(system, lang, payRequestDTO);
+                responseDTO.setResultStatus(ResultStatus.SUCCESSFUL);
+                responseDTO.setHttpStatus(HttpStatus.OK);
+                messageDTO = get3cMessage(system, payResponseDTO.getResult(), payResponseDTO.getMessage(), lang);
+                LOGGER.debug(LOGGER_DEBUG_STRING, "Process Payment DTO:", responseDTO.getPayload());
+
+            } catch (UniversalPaymentException ex) {
+                responseDTO.setResultStatus(ResultStatus.FAILED);
+                responseDTO.setHttpStatus(HttpStatus.BAD_REQUEST);
+                LOGGER.error(LOGGER_ERROR_STRING, payRequestDTO, ex.getMessage());
+                messageDTO = prepareMessageDTOForErrors(ex, lang, system);
+
+            } catch (Exception e) {
+                responseDTO.setResultStatus(ResultStatus.FAILED);
+                responseDTO.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+                LOGGER.error(LOGGER_ERROR_STRING, payRequestDTO, e.getMessage());
+                messageDTO = new MessageDTO();
+                messageDTO.setMessage(e.getMessage());
+            } finally {
+                responseDTO.setPayload(payResponseDTO);
+                responseDTO.setMessage(messageDTO);
+            }
+            return responseDTO;  
+        } 
+    }
+
+
+===========================================================================================================================
+resource external template
+===========================================================================================================================
+
+
+@Override
+    public ResponseDTO<?> pay(@RequestHeader("X-Authorisation") String xAuthorisation,
+            @RequestHeader("lang") String lang, @PathVariable("paymentProcessor") String paymentProcessor,
+            @RequestBody PayRequestDTO payRequestDTO, HttpServletResponse httpServletResponse) {
+
+        ResponseDTO<PayResponseDTO> response = new ResponseDTO<>();
+        response.setResultStatus(ResultStatus.AWATING);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        try {
+            DeployProfileConfig deployProfileConfig = DeployProfileConfigFactory.forEnvironment();
+
+            baseURL = deployProfileConfig.getInternalBaseUrl();
+
+            paymentProcessorVerifier(paymentProcessor);
+
+            StringBuilder stringRequest = new StringBuilder(baseURL + URL_PATH + paymentProcessor + "/pay");
+
+            HttpPost httpRequest = new HttpPost(stringRequest.toString());
+            LOGGER.info(LOGGER_STRING, stringRequest);
+
+            httpRequest.setHeader(CONTENT_TYPE, APPLICATION_JSON);
+            httpRequest.setHeader(CONNECTION, KEEP_ALIVE);
+            httpRequest.setHeader(X_AUTHORIZATION, xAuthorisation);
+            httpRequest.setHeader("lang", lang);
+
+            updateAuthorization(deployProfileConfig, httpRequest);
+
+            String jsonString = mapper.writeValueAsString(payRequestDTO);
+            LOGGER.info(REQUEST_FOR_FETCHING_RECORDS, jsonString);
+            httpRequest.setEntity(new StringEntity(jsonString, HTTP.UTF_8));
+
+            HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+            jsonString = UniversalPaymentUtil.convertStreamToString(httpResponse.getEntity().getContent());
+
+            LOGGER.info(RESPONSE_FOR_FETCHING_RECORDS, jsonString);
+
+            response = mapper.readValue(jsonString, ResponseDTO.class);
+
+        } catch (UniversalPaymentException e) {
+            updateResponse(response, payRequestDTO.toString(), e);
+            response.setHttpCode(HttpStatus.NOT_FOUND.toString());
+            response.setMessage(new MessageDTO(e.getMessage()));
+            response.setHttpStatus(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            updateResponse(response, payRequestDTO.toString(), e);
+
+            response.setHttpCode(response.getHttpStatus() != null ? response.getHttpStatus().toString()
+                    : HttpStatus.INTERNAL_SERVER_ERROR.toString());
+            response.setMessage(new MessageDTO(e.getMessage()));
+        } finally {
+            httpServletResponse.setStatus(response.getHttpStatus().value());
+        }
+
+        return response;
+    }
+
+///////////////////////////////     end resource template       \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/////////////////////////////////////////////////////////////////////////////
 
 =======================================================================================
 dto-TransactionTokenDTO
