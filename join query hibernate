@@ -1,0 +1,53 @@
+@Repository
+public interface TransactionTokenRepository extends JpaRepository<TransactionToken, String> {
+
+	
+	public final String FIND_BY_PAYMENT_SYSTEM_CUSTOMER_ID = "SELECT Tt FROM TransactionToken "
+			+ "Tt WHERE Tt.paymentSystemCustomerId=:paymentSystemCustomerId";
+
+    @Query(FIND_BY_PAYMENT_SYSTEM_CUSTOMER_ID)
+    public List<TransactionToken> getTokenByPaymentSystemCustomerId(@Param("paymentSystemCustomerId") 
+    String paymentSystemCustomerId);
+    
+    
+    public final String FIND_BY_PAYMENT_SYSTEM_CUSTOMER_ID_AND_SYSTEM_ID = "SELECT TT FROM "
+    + "TransactionToken TT INNER JOIN TT.transactionMaster TM " 
+    		  + "WHERE TT.paymentSystemCustomerId=:paymentSystemCustomerId AND TM.system.id=:systemId";
+
+    @Query(FIND_BY_PAYMENT_SYSTEM_CUSTOMER_ID_AND_SYSTEM_ID)
+    public List<TransactionToken> getTokenByPaymentSystemCustomerIdAndSystemId(@Param("paymentSystemCustomerId") 
+    String paymentSystemCustomerId, @Param("systemId") String systemId);
+
+    
+    public final String EXISTING_TRANSACTION_TOKEN_BY_PAYER_REFERENCE = "SELECT TT FROM "
+            + "TransactionToken TT INNER JOIN TT.transactionMaster TM "
+            + "WHERE TT.paymentSystemCustomerId=:customerId AND TM.system.id=:systemId";
+
+    @Query(EXISTING_TRANSACTION_TOKEN_BY_PAYER_REFERENCE)
+    public TransactionToken getPendingTokenRecordByPayerReference(@Param("customerId") String customerId,
+            @Param("systemId") String systemId);
+    
+    
+    public final String EXISTING_TRANSACTION_TOKEN_BY_CARD_REFERENCE = "SELECT TT FROM "
+            + "TransactionToken TT INNER JOIN TT.transactionMaster TM "
+            + "WHERE TT.token=:cardReference AND TM.system.id=:systemId";
+    
+    @Query(EXISTING_TRANSACTION_TOKEN_BY_CARD_REFERENCE)
+    public TransactionToken getTokenRecordByCardReference(@Param("cardReference") String cardReference,
+            @Param("systemId") String systemId);
+    
+    
+    public final String EXISTING_TRANSACTION_TOKEN_BY_PAYER_AND_CARD_REFERENCE = "SELECT TT FROM "
+            + "TransactionToken TT INNER JOIN TT.transactionMaster TM "
+            + "WHERE TT.paymentSystemCustomerId=:customerId AND TT.token=:cardReference AND "
+            + "TM.system.id=:systemId";
+    
+    
+    
+    @Query(EXISTING_TRANSACTION_TOKEN_BY_PAYER_AND_CARD_REFERENCE)
+    public TransactionToken getPendingTokenRecordByPayerAndCardReference(@Param("customerId") String customerId, 
+            @Param("cardReference") String cardReference, @Param("systemId") String systemId);
+
+
+}
+
