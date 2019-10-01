@@ -1,0 +1,434 @@
+ //=========Transaction Token=====================================================================
+	 
+	   // ==============================================================================================
+	    
+    /**
+     * 
+     * get all transaction 
+     * 
+     * @param systemId
+     * @param page
+     * @param size
+     * @param xAuthorization
+     * @param lang
+     * @return
+     */
+    
+    @Override
+	public ResponseDTO<?> getAllTransactionToken(@RequestParam("systemId") String systemId, 
+			@RequestParam("page") int page, @RequestParam("size") int size,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang){
+    	
+
+    	ResponseDTO<List<TransactionTokenDTO>> response = new ResponseDTO<List<TransactionTokenDTO>>();
+        response.setResultStatus(ResultStatus.AWATING);
+        List<TransactionTokenDTO> result = null;
+        String message = null;
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+		
+		  System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+        
+       
+
+        try {
+            
+            result = universalPaymentAdminService.readAllTransactionToken(page, size);
+			response.setResultStatus(ResultStatus.SUCCESSFUL);
+			response.setHttpStatus(HttpStatus.OK);
+			messageDTO = prepareMessageDTO("Successful", "00", lang, system);
+			LOGGER.debug("Transaction Token read {}", result);
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            message = tx.getMessage();
+            messageDTO = prepareMessageDTO(tx.getMessage(), "", lang, system);
+            LOGGER.error("Transaction Token creating {}, error {}", tx.getMessage());
+           
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            message = e.getMessage();
+            messageDTO = new MessageDTO();
+            messageDTO.setMessage(message);
+            LOGGER.error("Error requesting {}, error {}", e.getMessage());
+           
+            
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+
+        return response;
+
+    	
+    }
+
+	// ==============================================================================================
+    
+    /**
+     * get transaction token by Id
+     * 
+     * @param id
+     * @param xAuthorization
+     * @param lang
+     * @param systemId
+     * @return
+     */
+    
+    @Override
+	public ResponseDTO<?> getTransactionToken(@PathVariable("id") String id,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId) {
+		 ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+	        response.setResultStatus(ResultStatus.AWATING);
+	        TransactionTokenDTO result = null;
+	        String message = null;
+	        ErrorMessage errorMessage = null;
+			MessageDTO messageDTO = null;
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+        
+
+	        try {
+	            
+	            result = universalPaymentAdminService.getTransactionTokenById(id);
+				response.setResultStatus(ResultStatus.SUCCESSFUL);
+				response.setHttpStatus(HttpStatus.OK);
+				messageDTO = prepareMessageDTO("Successful", "00", lang, system);
+				LOGGER.debug("Transaction Token read {}", result);
+				
+
+	        } catch (TransactionTokenException tx) {
+	            response.setResultStatus(ResultStatus.FAILED);
+	            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+	            message = tx.getMessage();
+	            messageDTO = prepareMessageDTO(tx.getMessage(), "", lang, system);
+	            LOGGER.error("Transaction Token creating {}, error {}", id, tx.getMessage());
+	           
+
+	        } catch (Exception e) {
+	            response.setResultStatus(ResultStatus.FAILED);
+	            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+	            message = e.getMessage();
+	            messageDTO = new MessageDTO();
+	            messageDTO.setMessage(message);
+	            LOGGER.error("Error requesting {}, error {}", id, e.getMessage());
+	          
+	        } finally {
+	            response.setHttpCode(response.getHttpStatus() != null
+	                    ? response.getHttpStatus().toString() : null);
+	            response.setMessage(messageDTO);
+	            response.setPayload(result);
+	        }
+
+	        return response;
+		}
+	
+
+
+	// ==============================================================================================
+  
+    /**
+	 * save Transaction token
+	 * 
+	 * @param transactionTokenDTO
+	 * @param xAuthorization
+	 * @param lang
+	 * @param systemId
+	 * @return
+	 */
+    
+	public ResponseDTO<?> saveTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId){
+    	
+    	ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        String message = null;
+        TransactionTokenDTO result = null;
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+        
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+     
+
+        try {
+        	result = universalPaymentAdminService.saveTransactionToken(transactionTokenDTO);
+        	response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.CREATED);
+            LOGGER.debug("Transaction Token saved {}", result);
+            messageDTO = prepareMessageDTO("Successful", "00", lang, system);
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Transaction Token saving {}, error {}", transactionTokenDTO, tx.getMessage());
+            message = tx.getMessage();
+            messageDTO = prepareMessageDTO(tx.getMessage(), "", lang, system);
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, transactionTokenDTO.toString(), e.getMessage());
+            message = e.getMessage();
+            messageDTO = new MessageDTO();
+            messageDTO.setMessage(message);
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+        return response;
+
+	}
+
+	// ==============================================================================================
+	
+	/**
+	 * update transaction token
+	 * 
+	 * @param transactionTokenDTO
+	 * @param xAuthorization
+	 * @param lang
+	 * @param systemId
+	 * @return
+	 */
+	
+    @Override
+	public ResponseDTO<?> updateTransactionToken(@RequestBody TransactionTokenDTO transactionTokenDTO,
+			@RequestHeader("X-Authorisation") String xAuthorization, @RequestHeader("lang") String lang,
+			@RequestParam("systemId") String systemId){
+    	
+    	ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        TransactionTokenDTO result = null;
+        String message = null;
+        
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+        
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+        
+        try {
+            result = universalPaymentAdminService.updateTransactionToken(transactionTokenDTO);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.CREATED);
+            LOGGER.debug("Transaction Token updated {}", result);
+            messageDTO = prepareMessageDTO("Successful", "00", lang, system);
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Transaction Token updating {}, error {}", transactionTokenDTO, tx.getMessage());
+            message = tx.getMessage();
+            messageDTO = prepareMessageDTO(tx.getMessage(), "", lang, system);
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, transactionTokenDTO.toString(), e.getMessage());
+            message = e.getMessage();
+            messageDTO = new MessageDTO();
+            messageDTO.setMessage(message);
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+        return response;
+    }
+    
+ // ==============================================================================================
+
+    /**
+	  * delete transaction token
+	  * 
+	  * @param id
+	  * @param lang
+	  * @param systemId
+	  * @param xAuthorization
+	  * @return
+	  */
+    
+	public ResponseDTO<?> deleteTransactionToken(@PathVariable String id, @RequestHeader("lang") String lang,
+			@RequestHeader("X-Authorisation") String xAuthorization,
+			@RequestParam("systemId") String systemId){
+		
+		ResponseDTO<TransactionTokenDTO> response = new ResponseDTO<TransactionTokenDTO>();
+        response.setResultStatus(ResultStatus.AWATING);
+        TransactionTokenDTO result = null;
+        String message = null;
+        
+        ErrorMessage errorMessage = null;
+		MessageDTO messageDTO = null;
+        
+	        
+			System system = systemRepository.getSpecificSystemList(xAuthorization, systemId);
+	        if (system == null) {
+	        	
+	             errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		 get(new ErrorMessageKey(UPA400, lang, null));   
+	             messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "403", INCORRECT_CREDINTIALS);
+	             return setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+	        }
+	        
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(lang)) {
+	        	lang = DEFAULT_LANGUAGE_CODE;
+	        }
+	        if (!checkLanguageCode(lang)){
+	        	
+	        	errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA433, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, "", "", "400", INVALID_LANGUAGE_CODE);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+	        }
+	        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+	        	
+	            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+	            		get(new ErrorMessageKey(UPA402, lang, null));   
+	            messageDTO = prepareMessageDTOForUpaErrors(errorMessage, lang, "", "400", PROVIDE_SYSTEM_ID);
+	            return setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+	        }
+
+        try {
+        	universalPaymentAdminService.deleteTransactionToken(id);
+            response.setResultStatus(ResultStatus.SUCCESSFUL);
+            response.setHttpStatus(HttpStatus.OK);
+            LOGGER.debug(" Transaction Token deleted");
+            messageDTO = prepareMessageDTO("Successful", "00", lang, system);
+
+        } catch (TransactionTokenException tx) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.BAD_REQUEST);
+            LOGGER.error("Transaction Token delete {}, error {}", id, tx.getMessage());
+            message = tx.getMessage();
+            messageDTO = prepareMessageDTO(tx.getMessage(), "", lang, system);
+
+        } catch (Exception e) {
+            response.setResultStatus(ResultStatus.FAILED);
+            response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            LOGGER.error(ERROR_STRING, id, e.getMessage());
+            message = e.getMessage();
+            messageDTO = new MessageDTO();
+            messageDTO.setMessage(message);
+        } finally {
+            response.setHttpCode(response.getHttpStatus() != null
+                    ? response.getHttpStatus().toString() : null);
+            response.setMessage(messageDTO);
+            response.setPayload(result);
+        }
+
+        return response;
+
+
+	}
+	
