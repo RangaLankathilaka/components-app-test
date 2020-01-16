@@ -1,0 +1,101 @@
+http://localhost:8080/upa-api/v1/admin/filterErrorMessage?page=0&size=3&errorCode=753&paymentProvider=THREEC_WEB2PAY&noeticCode=UPA400
+
+http://localhost:8080/upa-api/v1/admin/filterErrorMessage?page=0&size=3&errorCode=753&paymentProvider=THREEC_WEB2PAY
+
+http://localhost:8080/upa-api/v1/admin/filterErrorMessage?page=0&size=3&errorCode=753
+
+http://localhost:8080/upa-api/v1/admin/filterErrorMessage?page=0&size=10
+
+
+
+
+@Override
+	public List<ErrorMessageDTO> filterErrorMessage(Map<String, String> reqParam) throws ErrorMessageException {
+		Pageable pageRequest = null;
+		int page = 0;
+		int size = 0;
+
+		if ((reqParam.containsKey("page")) && (reqParam.containsKey("size"))) {
+			page = Integer.parseInt(reqParam.get("page"));
+			size = Integer.parseInt(reqParam.get("size"));
+			reqParam.remove("page");
+			reqParam.remove("size");
+			pageRequest = createPageRequest(page, size);
+		}
+
+		List<ErrorMessage> errorMessageList = null;
+		List<ErrorMessageDTO> errorMessageDTOList = new ArrayList<>();
+		ErrorMessageDTO errorMessageDTO = null;
+
+		try {
+
+			if (reqParam.isEmpty()) {
+				errorMessageList = errorMessageRepository
+						.filterErrorMessage(pageRequest).getContent();
+				
+			} else {
+				errorMessageList = filterErrorMessageQuery(reqParam, page, size);
+			}
+
+			if (errorMessageList == null) {
+				throw new ErrorMessageException("ErrorMessage List not found.");
+			} else {
+
+				for (ErrorMessage errorMessage : errorMessageList) {
+
+					errorMessageDTO = errorMessageTransformer.transformDomainToDTO(errorMessage);
+					errorMessageDTOList.add(errorMessageDTO);
+				}
+			}
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+		return errorMessageDTOList;
+	}
+
+	public List<ErrorMessage> filterErrorMessageQuery(Map<String, String> reqParam, 
+			int page, int size) throws ErrorMessageException {
+
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Tuple> criteriaQuery = criteriaBuilder.createTupleQuery();
+		Root<ErrorMessage> root = criteriaQuery.from(ErrorMessage.class);
+        Predicate predicate = criteriaBuilder.conjunction();
+        
+		for (Map.Entry<String, String> param : reqParam.entrySet()) {
+
+			ErrorMessage errorMessage = new ErrorMessage();
+			Field[] declaredFields = errorMessage.getClass().getDeclaredFields();
+			ArrayList<String> fieldList = new ArrayList<>();;
+			for (Field field : declaredFields) {
+				fieldList.add(field.getName());
+			}
+			if (!fieldList.contains(param.getKey())) {
+				throw new ErrorMessageException(param.getKey() 
+						+ " not found in ErrorMessage table");
+			}
+
+			predicate = criteriaBuilder.and(predicate,
+					criteriaBuilder.equal(root.get(param.getKey()), param.getValue()));
+		}
+
+		//order asc according to the first param which send through the querystring
+		criteriaQuery.multiselect(root)
+				.where(predicate)
+				.orderBy(criteriaBuilder
+				.asc(root.get(reqParam.keySet().toArray()[0].toString())));
+
+		TypedQuery<Tuple> createQuery = entityManager.createQuery(criteriaQuery);
+		createQuery.setFirstResult((page) * size);
+		createQuery.setMaxResults(size);
+		List<Tuple> resultList = createQuery.getResultList();
+
+		List<ErrorMessage> errorMessageList = new ArrayList<>();
+
+		resultList.forEach(tuple -> {
+			ErrorMessage errorMessage = (ErrorMessage) tuple.get(0);
+			errorMessageList.add(errorMessage);
+		});
+
+		return errorMessageList;
+
+	}
