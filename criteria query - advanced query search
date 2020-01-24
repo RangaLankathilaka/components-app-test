@@ -8,6 +8,18 @@ http://localhost:8080/upa-api/v1/admin/filterErrorMessage?page=0&size=10
 
 
 
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+
+@Autowired
+EntityManager entityManager;
+
 
 @Override
 	public List<ErrorMessageDTO> filterErrorMessage(Map<String, String> reqParam) throws ErrorMessageException {
