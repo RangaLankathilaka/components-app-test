@@ -1,0 +1,8 @@
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
+public class PayDTO extends RequestDTO{
+
+
+}
+
+DTO eke nethi JSON eke thiyena properties ignore krnw
