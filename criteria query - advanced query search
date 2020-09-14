@@ -111,3 +111,158 @@ EntityManager entityManager;
 		return errorMessageList;
 
 	}
+
+
+
+
+
+
+controller >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+@Override
+	public ResponseDTO<?> filterTransactionDetail(@RequestParam Map<String, String> reqParam, 
+	  		  @RequestHeader("X-Authorisation") String xAuthorisation,
+	  		  @RequestHeader("systemId") String systemId, 
+	  		  @RequestHeader("paymentProcessor") String paymentProcessor) {
+		ResponseDTO<TransactionDetailResponseDTO> response = new ResponseDTO<>();
+		response.setResultStatus(ResultStatus.AWATING);
+		List<TransactionDetailDTO> result = null;
+		ResponseDTO<BaseResponseDTO> validationResponse = null;
+		TransactionDetailResponseDTO resultList = new TransactionDetailResponseDTO();
+		String message = null;
+		MessageDTO messageDTO = null;
+		
+		validationResponse = validateHeaders(systemId, DEFAULT_LANGUAGE_CODE, 
+				paymentProcessor, xAuthorisation);
+
+		if (validationResponse != null) {
+			return validationResponse;
+		}
+		System system = systemRepository.getSpecificSystemList(xAuthorisation, systemId);
+
+		try {
+			result = transactionLoggingService.filterTransactionDetail(reqParam, systemId);
+			resultList.setTransactionDetailList(result);
+			messageDTO = UpaFieldValidationUtil.prepareMessageDTO("Successful", "00", 
+					DEFAULT_LANGUAGE_CODE, system);
+			response.setResultStatus(ResultStatus.SUCCESSFUL);
+			response.setHttpStatus(HttpStatus.OK);
+			LOGGER.debug("TransactionDetail List read {}", result);
+
+		} catch (TransactionLoggingException tx) {
+			response.setResultStatus(ResultStatus.FAILED);
+			response.setHttpStatus(HttpStatus.BAD_REQUEST);
+			LOGGER.error("TransactionDetail List reading error {}", tx.getMessage());
+			messageDTO = prepareMessageDTO(tx.getMessage(), HttpStatus.BAD_REQUEST.value());
+
+		} catch (Exception e) {
+			response.setResultStatus(ResultStatus.FAILED);
+			response.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+			LOGGER.error(ERROR_STRING, e.getMessage());
+			messageDTO = prepareMessageDTO(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value());
+		} finally {
+			response.setHttpCode(response.getHttpStatus() != null ? response
+					.getHttpStatus().toString() : null);
+			response.setMessage(messageDTO);
+			response.setPayload(resultList);
+		}
+
+		return response;
+	}
+
+
+
+
+
+ /**
+     * Validate Headers 
+     * @param systemId
+     * @param lang
+     * @param paymentProvider
+     * @param xAuthorisation
+     * @return
+     */
+    public ResponseDTO<BaseResponseDTO> validateHeaders(String systemId, String lang, 
+            String paymentProvider, String xAuthorisation){
+        
+        
+        ResponseDTO<BaseResponseDTO> response = null;
+        MessageDTO messageDTO = null;
+        ErrorMessage errorMessage = null;       
+        
+        if (!UpaFieldValidationUtil.checkLanguageCode(lang)){
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA433, lang, null));   
+            messageDTO = UpaFieldValidationUtil.prepareMessageDTOForUpaErrors(errorMessage, "", "", 
+                    "400", INVALID_LANGUAGE_CODE);
+            return UpaFieldValidationUtil.setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO);
+        }
+        if (UniversalPaymentUtil.isNullOrWhiteSpace(systemId)) {
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA402, lang, null));   
+            messageDTO = UpaFieldValidationUtil.prepareMessageDTOForUpaErrors(errorMessage, lang, "", 
+                    "400", PROVIDE_SYSTEM_ID);
+            return UpaFieldValidationUtil.setResponse(ResultStatus.FAILED, HttpStatus.BAD_REQUEST, messageDTO); 
+        }
+        
+        System system = systemRepository.getSpecificSystemList(xAuthorisation, 
+                systemId);
+        
+       if (system == null) {
+            
+            errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                    get(new ErrorMessageKey(UPA400, lang, null));   
+            messageDTO = UpaFieldValidationUtil.prepareMessageDTOForUpaErrors(errorMessage, lang, 
+                    "", "403", INCORRECT_CREDINTIALS);
+            return UpaFieldValidationUtil.setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+       }
+       if (UniversalPaymentUtil.isNullOrWhiteSpace(paymentProvider)) {
+           
+           errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                   get(new ErrorMessageKey(UPA401, lang, null));
+           messageDTO = UpaFieldValidationUtil.prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), 
+                   "403", PROVIDE_PAYMENT_PROVIDER);
+           return UpaFieldValidationUtil.setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+       }     
+             
+          paymentProvider = paymentProvider.toUpperCase();
+       
+       if (!UpaFieldValidationUtil.checkPaymentProvider(paymentProvider)) {
+           
+           errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                   get(new ErrorMessageKey(UPA434, lang, null));
+           messageDTO = UpaFieldValidationUtil.prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), 
+                   "403", INVALID_PAYMENT_PROVIDER);
+           return UpaFieldValidationUtil.setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+       }
+       if (paymentProviderUtil.paymentProcessorIsInactive(paymentProvider, system.getId())) {
+           
+           errorMessage = loadErrorMessagesUtil.getErrorMap().get(DEFAULT_PAYMENT_PROVIDER).
+                   get(new ErrorMessageKey(UPA440, lang, null));
+           messageDTO = UpaFieldValidationUtil.prepareMessageDTOForUpaErrors(errorMessage, lang, system.getName(), 
+                   "403", PROVIDE_PAYMENT_PROVIDER);
+           return UpaFieldValidationUtil.setResponse(ResultStatus.FAILED, HttpStatus.FORBIDDEN, messageDTO); 
+       }
+        return response;
+        
+    }
+    
+    /**
+     * Prepare MessageDTO
+     * 
+     * @param message
+     * @param code
+     * @return
+     */
+    MessageDTO prepareMessageDTO(String message, int code) {
+
+        MessageDTO messageDTO = new MessageDTO();
+        messageDTO.setCode(String. valueOf(code));
+        messageDTO.setMessage(message);
+
+        return messageDTO;
+    }
+
