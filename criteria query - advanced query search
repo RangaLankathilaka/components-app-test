@@ -8,6 +8,229 @@ http://localhost:8080/upa-api/v1/admin/filterErrorMessage?page=0&size=10
 
 
 
+
+
+
+
+////////////////////////////////////////////////////////////////////////////
+/////////////////TransactionDetailDTO////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+@Override
+	public List<TransactionDetailDTO> filterTransactionDetail(Map<String, String> reqParam, 
+			String systemId)throws TransactionLoggingException {
+		Pageable pageRequest = null;
+		int page = 0;
+		int size = 0;
+
+		if ((reqParam.containsKey("page")) && (reqParam.containsKey("size"))) {
+			page = Integer.parseInt(reqParam.get("page"));
+			size = Integer.parseInt(reqParam.get("size"));
+			reqParam.remove("page");
+			reqParam.remove("size");
+			pageRequest = createPageRequest(page, size);
+		}
+
+		List<TransactionDetail> transactionDetailList = null;
+		List<TransactionDetailDTO> transactionDetailDTOList = new ArrayList<>();
+		TransactionDetailDTO transactionDetailDTO = null;
+
+		try {
+
+
+			System system = systemRepository.getOne(systemId);
+			Account account = system.getAccount();
+			if (reqParam.isEmpty()) {
+				
+				if (account.getIsExcludeMultiTenancy()) {
+
+					transactionDetailList = transactionDetailRepository
+							.findAll(pageRequest).getContent().stream()
+							.filter(i->i.getTransactionMaster().getSystem()
+							.getAccount().getId().equals(account.getId()))
+							.collect(Collectors.toList());
+				} else {
+
+					transactionDetailList = transactionDetailRepository
+							.findAll(pageRequest).getContent().stream()
+							.filter(i->i.getTransactionMaster().getSystem()
+							.getId().equals(systemId)).collect(Collectors.toList());
+				}
+				
+				
+			} else {
+				
+				if (account.getIsExcludeMultiTenancy()) {
+
+					transactionDetailList = filterTransactionDetailQuery(reqParam, page, size);
+					transactionDetailList.stream()
+					.filter(i->i.getTransactionMaster().getSystem()
+					.getAccount().getId().equals(account.getId()))
+					.collect(Collectors.toList());
+					
+				} else {
+
+					transactionDetailList = filterTransactionDetailQuery(reqParam, page, size);
+					transactionDetailList.stream()
+					.filter(i->i.getTransactionMaster().getSystem()
+					.getId().equals(systemId)).collect(Collectors.toList());
+				}
+			}
+
+			if (transactionDetailList == null) {
+				throw new TransactionLoggingException("TransactionDetail List not found.");
+			} else {
+
+				for (TransactionDetail transactionDetail : transactionDetailList) {
+
+					transactionDetailDTO = transactionDetailTransformer
+							.transformDomainToDTO(transactionDetail);
+					transactionDetailDTO.setSystemId(transactionDetail.getTransactionMaster()
+							.getSystem().getId());
+					transactionDetailDTO.setPaymentProvider(transactionDetail
+							.getTransactionMaster().getPaymentSystemName());
+					transactionDetailDTOList.add(transactionDetailDTO);
+				}
+			}
+		} catch (TransformerException e) {
+			LOGGER.error(ERROR_OCCURED, e.getMessage());
+		}
+		return transactionDetailDTOList;
+	}
+
+	/**
+	 * This method can be used to filter details using 
+	 * 'equal' and 'like' operator , passing the LIKE with 
+	 * the request param can be applied as a parameter value 'like' operator
+	 * filter functionality
+	 *  
+	 * @param reqParam
+	 * @param page
+	 * @param size
+	 * @return
+	 * @throws TransactionLoggingException
+	 */
+	public List<TransactionDetail> filterTransactionDetailQuery(Map<String, String> reqParam, 
+			int page, int size) throws TransactionLoggingException {
+
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Tuple> criteriaQuery = criteriaBuilder.createTupleQuery();
+		Root<TransactionDetail> root = criteriaQuery.from(TransactionDetail.class);
+        Predicate predicate = criteriaBuilder.conjunction();
+        
+		for (Map.Entry<String, String> param : reqParam.entrySet()) {
+
+			TransactionDetail transactionDetail = new TransactionDetail();
+			Field[] declaredFields = transactionDetail.getClass().getDeclaredFields();
+			ArrayList<String> fieldList = new ArrayList<>();
+			for (Field field : declaredFields) {
+				fieldList.add(field.getName());
+			}
+			if (!fieldList.contains(param.getKey())) {
+				throw new TransactionLoggingException(param.getKey() 
+						+ " not found in transactionDetail table");
+			}
+			
+			if ((param.getValue()).contains("LIKE")) {
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.like(root.get(param.getKey()), (param
+								.getValue()).replace("LIKE", "%")));
+			} else {
+				predicate = criteriaBuilder.and(predicate,
+						criteriaBuilder.equal(root.get(param.getKey()), param.getValue()));
+			}
+
+			
+		}
+
+		//order asc according to the first param which send through the querystring
+		criteriaQuery.multiselect(root)
+				.where(predicate)
+				.orderBy(criteriaBuilder
+				.asc(root.get("created")));
+
+		TypedQuery<Tuple> createQuery = entityManager.createQuery(criteriaQuery);
+		createQuery.setFirstResult((page) * size);
+		createQuery.setMaxResults(size);
+		List<Tuple> resultList = createQuery.getResultList();
+
+		List<TransactionDetail> transactionDetailList = new ArrayList<>();
+
+		resultList.forEach(tuple -> {
+			TransactionDetail transactionDetail = (TransactionDetail) tuple.get(0);
+			transactionDetailList.add(transactionDetail);
+		});
+		
+		return transactionDetailList;
+
+	}
+
+	private Pageable createPageRequest(int page, int size) {
+	    return new PageRequest(page, size);
+	}
+	
+
+
+
+--------------------------end--------------------------------------------
+////////////////////////////////////////////////////////////////////////////
+/////////////////TransactionDetailDTO////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
